@@ -1,0 +1,11 @@
+message LOGIN{
+	required string username = 10;
+	
+	enum VALIDATION {
+	    OK = 0;
+	    IN_USE = 1;
+	    INVALID = 2;
+	  }
+
+	optional VALIDATION validation = 11;
+}
