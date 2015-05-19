@@ -11,6 +11,8 @@
 
 #include "client-server.pb-c.h"
 
+#include "client.h"
+
 int main(){
 	//Variables
 	//General
@@ -18,7 +20,6 @@ int main(){
 	
 	//Socket
 	int sock_fd;
-	struct sockaddr_in server_addr;
 	
 	//Proto
 	LOGIN login , *login_response;
@@ -28,20 +29,8 @@ int main(){
 
 	//Program
 	//Socket
-	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	perror("socket ");
-	if(sock_fd == -1){
-		exit(-1);
-	}
-
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(3000);				/*Port*/
-	inet_aton("127.0.0.1", & server_addr.sin_addr); /*IP*/	
-
-	if( connect(sock_fd, ( struct sockaddr *) &server_addr, sizeof(server_addr)) == -1){
-		perror("connect ");
-		exit(-1);
-	}
+	sock_fd = iniSocket();
+	
 	
 	//User Interface
 	printf("Username: ");
@@ -78,4 +67,26 @@ int main(){
 					
 	exit(0);
 	
+}
+
+int iniSocket(){
+	int sock_fd;
+	struct sockaddr_in server_addr;
+	
+	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	perror("socket ");
+	if(sock_fd == -1){
+		exit(-1);
+	}
+
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(3000);				/*Port*/
+	inet_aton("127.0.0.1", & server_addr.sin_addr); /*IP*/	
+
+	if( connect(sock_fd, ( struct sockaddr *) &server_addr, sizeof(server_addr)) == -1){
+		perror("connect ");
+		exit(-1);
+	}
+	
+	return sock_fd;
 }

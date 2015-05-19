@@ -11,6 +11,8 @@
 
 #include "client-server.pb-c.h"
 
+#include "server.h"
+
 int main(){
 	//Variables
 	//General
@@ -18,8 +20,6 @@ int main(){
 	
 	//Socket
 	int sock_fd, new_sock;
-	struct sockaddr_in addr, client_addr;
-	int addr_len; 
 	
 	//Proto
 	LOGIN *login , login_response;
@@ -29,25 +29,8 @@ int main(){
 
 	//Program
 	//Socket
-	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	perror("socket ");
-	if(sock_fd == -1){
-		exit(-1);
-	}
-	
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(3000);		/*Port*/
-    addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/	
+	sock_fd = iniSocket();
 
-	
-	bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr));
-	perror("bind");
-	
-	
-	if( listen(sock_fd, 10) == -1){
-		perror("listen ");
-		exit(-1);
-	}
 	
 	while(1){
 		new_sock = accept(sock_fd, NULL, NULL);
@@ -73,10 +56,38 @@ int main(){
 		perror("send");
 			
 		//Socket
-		close(new_sock);	
+		close(new_sock);
 	}
 	
 
 	exit(0);
 	
+}
+
+
+int iniSocket(){
+	int sock_fd;
+	struct sockaddr_in addr, client_addr;
+	int addr_len; 
+	
+	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	perror("socket ");
+	if(sock_fd == -1){
+		exit(-1);
+	}
+	
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(3000);		/*Port*/
+    addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/	
+
+	
+	bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr));
+	perror("bind");
+	
+	
+	if( listen(sock_fd, 10) == -1){
+		perror("listen ");
+		exit(-1);
+	}
+	return sock_fd;
 }
