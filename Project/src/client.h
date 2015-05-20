@@ -2,7 +2,8 @@
 #define HEADER_CLIENT
 
 int iniSocket();
+void login(char *buffer);
 proto_msg *loginSendProtocol(char *buffer);
-int loginReceiveProtocol(proto_msg *login_response_message);
+void loginReceiveProtocol(proto_msg *login_response_message);
 
 #endif
