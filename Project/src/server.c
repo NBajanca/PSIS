@@ -19,11 +19,43 @@
 
 void * server_thread(void *arg){
 	Client* user = (Client*) arg;
+	int should_exit = 0;
 	
 	//Login Process
 	do{
 		login(user);
 	}while (user->user_name == NULL);
+	
+	
+	while(! should_exit){
+		
+		//Receive Message
+		proto_msg * control_message = createProtoMSG();
+		control_message->msg_size = read(user->sock, control_message->msg, BUFFER_SIZE);
+		
+		//Socket closed by client
+		if ( control_message->msg_size == 0){
+			should_exit = 1;
+			break;
+		}
+		
+		//Unmarshal incoming message
+		CONTROL *control = control__unpack(NULL, control_message->msg_size, control_message->msg);
+		
+		switch (control->next_message){
+			case 0:
+				
+				break;
+			
+			case 1:
+				break;
+				
+			case 2:
+				should_exit = 1;
+				break;
+		}
+		
+	}
 
 	
 	//Close Connection

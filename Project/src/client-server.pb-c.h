@@ -9,6 +9,7 @@ PROTOBUF_C_BEGIN_DECLS
 
 
 typedef struct _LOGIN LOGIN;
+typedef struct _CONTROL CONTROL;
 
 
 /* --- enums --- */
@@ -18,6 +19,11 @@ typedef enum _LOGIN__VALIDATION {
   LOGIN__VALIDATION__IN_USE = 1,
   LOGIN__VALIDATION__INVALID = 2
 } LOGIN__VALIDATION;
+typedef enum _CONTROL__NEXTMESSAGE {
+  CONTROL__NEXT__MESSAGE__CHAT = 0,
+  CONTROL__NEXT__MESSAGE__QUERY = 1,
+  CONTROL__NEXT__MESSAGE__DISC = 2
+} CONTROL__NEXTMESSAGE;
 
 /* --- messages --- */
 
@@ -31,6 +37,17 @@ struct  _LOGIN
 #define LOGIN__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&login__descriptor) \
     , NULL, 0,0 }
+
+
+struct  _CONTROL
+{
+  ProtobufCMessage base;
+  CONTROL__NEXTMESSAGE next_message;
+  int32_t size_next_message;
+};
+#define CONTROL__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&control__descriptor) \
+    , 0, 0 }
 
 
 /* LOGIN methods */
@@ -52,10 +69,32 @@ LOGIN *
 void   login__free_unpacked
                      (LOGIN *message,
                       ProtobufCAllocator *allocator);
+/* CONTROL methods */
+void   control__init
+                     (CONTROL         *message);
+size_t control__get_packed_size
+                     (const CONTROL   *message);
+size_t control__pack
+                     (const CONTROL   *message,
+                      uint8_t             *out);
+size_t control__pack_to_buffer
+                     (const CONTROL   *message,
+                      ProtobufCBuffer     *buffer);
+CONTROL *
+       control__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   control__free_unpacked
+                     (CONTROL *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*LOGIN_Closure)
                  (const LOGIN *message,
+                  void *closure_data);
+typedef void (*CONTROL_Closure)
+                 (const CONTROL *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -65,6 +104,8 @@ typedef void (*LOGIN_Closure)
 
 extern const ProtobufCMessageDescriptor login__descriptor;
 extern const ProtobufCEnumDescriptor    login__validation__descriptor;
+extern const ProtobufCMessageDescriptor control__descriptor;
+extern const ProtobufCEnumDescriptor    control__next__message__descriptor;
 
 PROTOBUF_C_END_DECLS
 

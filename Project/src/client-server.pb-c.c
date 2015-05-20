@@ -49,6 +49,49 @@ void   login__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &login__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   control__init
+                     (CONTROL         *message)
+{
+  static CONTROL init_value = CONTROL__INIT;
+  *message = init_value;
+}
+size_t control__get_packed_size
+                     (const CONTROL *message)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t control__pack
+                     (const CONTROL *message,
+                      uint8_t       *out)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t control__pack_to_buffer
+                     (const CONTROL *message,
+                      ProtobufCBuffer *buffer)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+CONTROL *
+       control__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (CONTROL *)
+     protobuf_c_message_unpack (&control__descriptor,
+                                allocator, len, data);
+}
+void   control__free_unpacked
+                     (CONTROL *message,
+                      ProtobufCAllocator *allocator)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 const ProtobufCEnumValue login__validation__enum_values_by_number[3] =
 {
   { "OK", "LOGIN__VALIDATION__OK", 0 },
@@ -128,5 +171,86 @@ const ProtobufCMessageDescriptor login__descriptor =
   login__field_indices_by_name,
   1,  login__number_ranges,
   (ProtobufCMessageInit) login__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+const ProtobufCEnumValue control__next__message__enum_values_by_number[3] =
+{
+  { "CHAT", "CONTROL__NEXT__MESSAGE__CHAT", 0 },
+  { "QUERY", "CONTROL__NEXT__MESSAGE__QUERY", 1 },
+  { "DISC", "CONTROL__NEXT__MESSAGE__DISC", 2 },
+};
+static const ProtobufCIntRange control__next__message__value_ranges[] = {
+{0, 0},{0, 3}
+};
+const ProtobufCEnumValueIndex control__next__message__enum_values_by_name[3] =
+{
+  { "CHAT", 0 },
+  { "DISC", 2 },
+  { "QUERY", 1 },
+};
+const ProtobufCEnumDescriptor control__next__message__descriptor =
+{
+  PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
+  "CONTROL.NEXT_MESSAGE",
+  "NEXT_MESSAGE",
+  "CONTROL__NEXTMESSAGE",
+  "",
+  3,
+  control__next__message__enum_values_by_number,
+  3,
+  control__next__message__enum_values_by_name,
+  1,
+  control__next__message__value_ranges,
+  NULL,NULL,NULL,NULL   /* reserved[1234] */
+};
+static const ProtobufCFieldDescriptor control__field_descriptors[2] =
+{
+  {
+    "next_message",
+    20,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_ENUM,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(CONTROL, next_message),
+    &control__next__message__descriptor,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "size_next_message",
+    21,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(CONTROL, size_next_message),
+    NULL,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned control__field_indices_by_name[] = {
+  0,   /* field[0] = next_message */
+  1,   /* field[1] = size_next_message */
+};
+static const ProtobufCIntRange control__number_ranges[1 + 1] =
+{
+  { 20, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor control__descriptor =
+{
+  PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
+  "CONTROL",
+  "CONTROL",
+  "CONTROL",
+  "",
+  sizeof(CONTROL),
+  2,
+  control__field_descriptors,
+  control__field_indices_by_name,
+  1,  control__number_ranges,
+  (ProtobufCMessageInit) control__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
