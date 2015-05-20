@@ -5,25 +5,30 @@ EXE_DIR =./bin
 OBJ_DIR =./obj
 
 PROTO_FLAGS = -l protobuf-c
+THREADS = -lpthread 
 
 CLIENTSERVER = client-server
 SERVER = server
+CLIENTDB = client-db
 CLIENT = client
 PROTO = client-server.pb-c
 
 all: $(EXE_DIR)/$(SERVER) $(EXE_DIR)/$(CLIENT)
 
-$(EXE_DIR)/$(SERVER): $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/$(CLIENTSERVER).o 
-	$(CC) $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/$(CLIENTSERVER).o -o $(EXE_DIR)/$(SERVER) $(PROTO_FLAGS)
+$(EXE_DIR)/$(SERVER): $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/$(CLIENTSERVER).o $(OBJ_DIR)/$(CLIENTDB).o 
+	$(CC) $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/$(CLIENTSERVER).o $(OBJ_DIR)/$(CLIENTDB).o  -o $(EXE_DIR)/$(SERVER) $(PROTO_FLAGS) $(THREADS)
 
 $(OBJ_DIR)/$(SERVER).o: $(SRC_DIR)/$(SERVER).c $(SRC_DIR)/$(SERVER).h $(SRC_DIR)/$(CLIENTSERVER).h $(SRC_DIR)/$(PROTO).h
-	$(CC) -c $(SRC_DIR)/$(SERVER).c -o $(OBJ_DIR)/$(SERVER).o
+	$(CC) -c $(SRC_DIR)/$(SERVER).c -o $(OBJ_DIR)/$(SERVER).o $(PROTO_FLAGS) $(THREADS)
 
 $(EXE_DIR)/$(CLIENT): $(OBJ_DIR)/$(CLIENT).o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/$(CLIENTSERVER).o
 	$(CC) $(OBJ_DIR)/$(CLIENT).o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/$(CLIENTSERVER).o -o $(EXE_DIR)/$(CLIENT) $(PROTO_FLAGS)
 	
 $(OBJ_DIR)/$(CLIENT).o: $(SRC_DIR)/$(CLIENT).c $(SRC_DIR)/$(CLIENT).h $(SRC_DIR)/$(CLIENTSERVER).h $(SRC_DIR)/$(PROTO).h
-	$(CC) -c $(SRC_DIR)/$(CLIENT).c -o $(OBJ_DIR)/$(CLIENT).o
+	$(CC) -c $(SRC_DIR)/$(CLIENT).c -o $(OBJ_DIR)/$(CLIENT).o $(PROTO_FLAGS)
+
+$(OBJ_DIR)/$(CLIENTDB).o: $(SRC_DIR)/$(CLIENTDB).c $(SRC_DIR)/$(CLIENTDB).h
+	$(CC) -c $(SRC_DIR)/$(CLIENTDB).c -o $(OBJ_DIR)/$(CLIENTDB).o
 
 $(OBJ_DIR)/$(CLIENTSERVER).o: $(SRC_DIR)/$(CLIENTSERVER).c $(SRC_DIR)/$(CLIENTSERVER).h $(SRC_DIR)/$(PROTO).h
 	$(CC) -c $(SRC_DIR)/$(CLIENTSERVER).c -o $(OBJ_DIR)/$(CLIENTSERVER).o

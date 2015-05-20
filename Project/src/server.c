@@ -9,12 +9,44 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
+#include <pthread.h>
+
 #include "client-server.pb-c.h"
 
 #include "client-server.h"
+#include "client-db.h"
 #include "server.h"
 
-ClientDB *client_db;
+void * server_thread(void *arg){
+	Client* user = (Client*) arg;
+	
+	//Login Process
+	do{
+		login(user);
+	}while (user->user_name == NULL);
+
+	
+	//Close Connection
+	close(user->sock);
+	removeClient(user);
+	pthread_exit(NULL);
+}
+
+void login(Client* user){
+	//Read Message
+	proto_msg * login_message = createProtoMSG();
+	login_message->msg_size = read(user->sock, login_message->msg, BUFFER_SIZE);
+	
+	//Login Protocol - PROTO and CLIENTDB
+	proto_msg * proto_message = loginProtocol(login_message, user);
+	destroyProtoMSG(login_message);
+	
+	//Send Message
+	send(user->sock, proto_message->msg, proto_message->msg_size, 0);
+	destroyProtoMSG(proto_message);
+	
+	return;
+}
 
 int main(){
 	//Variables
@@ -36,25 +68,14 @@ int main(){
 	while(1){
 		new_sock = accept(sock_fd, NULL, NULL);
 		perror("accept");
-
-		//Read Message
-		proto_msg * login_message = createProtoMSG();
-		login_message->msg_size = read(new_sock, login_message->msg, BUFFER_SIZE);
 		
-		//Proto
-		proto_msg * proto_message = loginProtocol(login_message);
-		destroyProtoMSG(login_message);
+		Client* user = createClient();
+		user->sock = new_sock;
 		
-		//Send Message
-		send(new_sock, proto_message->msg, proto_message->msg_size, 0);
-		perror("send");
-		destroyProtoMSG(proto_message);
-			
-		//Socket
-		close(new_sock);
+		pthread_create(&user->thread_id, NULL, server_thread, user);
 	}
 	
-	free(proto_message);
+	destroyClientDB();
 	exit(0);
 }
 
@@ -67,24 +88,29 @@ int main(){
  * @ login_message - Structure with the login message from the client
  * @ returns proto_message - Marshaled message for the client
  * */
-proto_msg *loginProtocol(proto_msg * login_message){
+proto_msg *loginProtocol(proto_msg * login_message, Client* user){
 	//Unmarshal incoming message
 	LOGIN *login = login__unpack(NULL, login_message->msg_size, login_message->msg);
-	printf("New user: %s", login->username);
 	
 	//Prepare response message
 	LOGIN login_response;
 	login__init(&login_response);
 	login_response.username = strdup(login->username);
-	login_response.validation = 0;
 	login_response.has_validation = 1;
+	
+	user->user_name = strdup(login->username);
+	if (addClient(user) != -1){
+		login_response.validation = 0;
+	}else{
+		login_response.validation = 1;
+		user->user_name = NULL;
+	}
 	
 	//Marshal response message
 	proto_msg * proto_message = protoCreateLogin(&login_response);
 	
 	return proto_message;
 }
-
 
 /* iniSocket
  * 
@@ -120,15 +146,4 @@ int iniSocket(){
 	}
 	
 	return sock_fd;
-}
-
-
-/* iniClientDB
- * 
- * Initializes the Client List
- * Changes the global variable
- * 
- * */
-void iniClientDB(){
-	client_db = (ClientDB*) malloc(sizeof(ClientDB));
 }
