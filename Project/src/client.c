@@ -18,20 +18,10 @@
 int main(){
 	//Variables
 	//General
-	char buffer[100];
+	char buffer[BUFFER_SIZE];
 	
 	//Socket
 	int sock_fd;
-	
-	//Proto
-	proto_msg *login_message, *login_response_message;
-	
-	login_response_message = (proto_msg*) malloc(sizeof(proto_msg));
-	if( login_response_message == NULL){
-		perror("proto_message ");
-		exit(-1);
-	}
-	login_response_message->msg = (char *) malloc (100*sizeof(char));
 
 	//Program
 	//Socket
@@ -39,51 +29,56 @@ int main(){
 	
 	//User Interface
 	printf("Username: ");
-    fgets(buffer, 100, stdin);
+    fgets(buffer, BUFFER_SIZE, stdin);
 	
 	//Login Proto
-	login_message = loginSendProtocol(buffer);
+	proto_msg * login_message = loginSendProtocol(buffer);
 	
 	//Send Message
 	send(sock_fd, login_message->msg, login_message->msg_size, 0);
 	perror("send");
+	destroyProtoMSG(login_message);
 
 	//Read Message
-	login_response_message->msg_size = read(sock_fd, login_response_message->msg, 100);
+	proto_msg * login_response_message = createProtoMSG();
+	login_response_message->msg_size = read(sock_fd, login_response_message->msg, BUFFER_SIZE);
 	
 	//Proto
 	loginReceiveProtocol(login_response_message);
+	destroyProtoMSG(login_response_message);
 					
 	exit(0);
 	
 }
 
+/* loginSendProtocol
+ * 
+ * Prepares the message regarding LOGIN
+ * Does the marshal
+ * 
+ * @ buffer - Buffer with the user name
+ * @ returns proto_message - Marshaled message for the server
+ * */
 proto_msg *loginSendProtocol(char *buffer){
-	proto_msg *proto_message;
-	
+	//Prepare message
 	LOGIN login;
 	login__init(&login);
-	char *login_msg;
-	size_t login_size;
-	
-	proto_message = (proto_msg*) malloc(sizeof(proto_msg));
-	if( proto_message == NULL){
-		perror("proto_message ");
-		exit(-1);
-	}
-	
 	login.username = strdup(buffer);
 	
-	login_size = login__get_packed_size(&login);
-    login_msg = malloc(login_size);
-	login__pack(&login, login_msg);
-	
-	proto_message->msg = login_msg;
-	proto_message->msg_size = login_size;
+	//Marshal message
+	proto_msg * proto_message = protoCreateLogin(&login);
 	
 	return proto_message;
 }
 
+/* loginReceiveProtocol
+ * 
+ * Deals with Login Message Response from server
+ * Does the unmarshal
+ * 
+ * @ login_response_message - Structure with the login response from the server
+ * @ returns int - Login information
+ * */
 int loginReceiveProtocol(proto_msg *login_response_message){	
 	LOGIN *login_response;
 	
@@ -105,6 +100,13 @@ int loginReceiveProtocol(proto_msg *login_response_message){
 }
 
 
+/* iniSocket
+ * 
+ * Initializes the socket connection
+ * Connects to server on PORT 3000, IP 127.0.0.1
+ * 
+ * @ returns sock_fd - Socket descriptor
+ * */
 int iniSocket(){
 	int sock_fd;
 	struct sockaddr_in server_addr;
