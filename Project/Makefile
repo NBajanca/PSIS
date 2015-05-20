@@ -10,21 +10,21 @@ SERVER = server
 CLIENT = client
 PROTO = client-server.pb-c
 
-all: $(SERVER) $(CLIENT)
+all: $(EXE_DIR)/$(SERVER) $(EXE_DIR)/$(CLIENT)
 
-$(SERVER): $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o
+$(EXE_DIR)/$(SERVER): $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o
 	$(CC) $(OBJ_DIR)/$(SERVER).o $(OBJ_DIR)/$(PROTO).o -o $(EXE_DIR)/$(SERVER) $(PROTO_FLAGS)
 
-$(OBJ_DIR)/$(SERVER).o: $(SRC_DIR)/$(SERVER).c $(SRC_DIR)/$(SERVER).h
+$(OBJ_DIR)/$(SERVER).o: $(SRC_DIR)/$(SERVER).c $(SRC_DIR)/$(SERVER).h $(SRC_DIR)/client-server.h
 	$(CC) -c $(SRC_DIR)/$(SERVER).c -o $(OBJ_DIR)/$(SERVER).o
 
-$(CLIENT): $(OBJ_DIR)/$(CLIENT).o $(OBJ_DIR)/$(PROTO).o
+$(EXE_DIR)/$(CLIENT): $(OBJ_DIR)/$(CLIENT).o $(OBJ_DIR)/$(PROTO).o
 	$(CC) $(OBJ_DIR)/$(CLIENT).o $(OBJ_DIR)/$(PROTO).o -o $(EXE_DIR)/$(CLIENT) $(PROTO_FLAGS)
 	
-$(OBJ_DIR)/$(CLIENT).o: $(SRC_DIR)/$(SERVER).c $(SRC_DIR)/$(SERVER).h
+$(OBJ_DIR)/$(CLIENT).o: $(SRC_DIR)/$(CLIENT).c $(SRC_DIR)/$(CLIENT).h $(SRC_DIR)/client-server.h
 	$(CC) -c $(SRC_DIR)/$(CLIENT).c -o $(OBJ_DIR)/$(CLIENT).o
 
-$(OBJ_DIR)/$(PROTO).o: $(SRC_DIR)/$(PROTO).c $(SRC_DIR)/$(PROTO).h 
+$(OBJ_DIR)/$(PROTO).o: $(SRC_DIR)/$(PROTO).c $(SRC_DIR)/$(PROTO).h
 	$(CC) -c $(SRC_DIR)/$(PROTO).c $(PROTO_FLAGS) -o $(OBJ_DIR)/$(PROTO).o
 
 clean:

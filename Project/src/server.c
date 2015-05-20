@@ -11,21 +11,26 @@
 
 #include "client-server.pb-c.h"
 
+#include "client-server.h"
 #include "server.h"
 
 int main(){
 	//Variables
 	//General
 	char buffer[100];
+	proto_msg *proto_message;
 	
 	//Socket
 	int sock_fd, new_sock;
 	
 	//Proto
-	LOGIN *login , login_response;
-	login__init(&login_response);
-	char login_msg[100], *login_response_msg;
-	size_t login_size, login_response_size;
+	proto_msg *login_message;
+	login_message = (proto_msg*) malloc(sizeof(proto_msg));
+	if( login_message == NULL){
+		perror("proto_message ");
+		exit(-1);
+	}
+	login_message->msg = (char *) malloc (100*sizeof(char));
 
 	//Program
 	//Socket
@@ -37,31 +42,50 @@ int main(){
 		perror("accept");
 
 		//Read Message
-		login_size = read(new_sock, login_msg, 100);
+		login_message->msg_size = read(new_sock, login_message->msg, 100);
 		
 		//Proto 
-		login = login__unpack(NULL, login_size, login_msg);
-		printf("New user: %s", login->username);
-		
-		login_response.username = strdup(login->username);
-		login_response.validation = 0;
-		login_response.has_validation = 1;
-		
-		login_response_size = login__get_packed_size(&login_response);
-		login_response_msg = malloc(login_response_size);
-		login__pack(&login_response, login_response_msg);
+		proto_message = loginProtocol(login_message);
 		
 		//Send Message
-		send(new_sock, login_response_msg, login_response_size, 0);
+		send(new_sock, proto_message->msg, proto_message->msg_size, 0);
 		perror("send");
 			
 		//Socket
 		close(new_sock);
 	}
 	
-
+	free(proto_message);
 	exit(0);
 	
+}
+
+proto_msg *loginProtocol(proto_msg * login_message){
+	proto_msg *proto_message;
+	
+	proto_message = (proto_msg*) malloc(sizeof(proto_msg));
+	if( proto_message == NULL){
+		perror("proto_message ");
+		exit(-1);
+	}
+	
+	LOGIN *login , login_response;
+	login__init(&login_response);
+	char *login_response_msg;
+	size_t login_response_size;
+	
+	login = login__unpack(NULL, login_message->msg_size, login_message->msg);
+	printf("New user: %s", login->username);
+	
+	login_response.username = strdup(login->username);
+	login_response.validation = 0;
+	login_response.has_validation = 1;
+	
+	proto_message->msg_size = login__get_packed_size(&login_response);
+	proto_message->msg = malloc(proto_message->msg_size);
+	login__pack(&login_response, proto_message->msg);
+	
+	return proto_message;
 }
 
 

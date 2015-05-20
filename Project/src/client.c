@@ -11,7 +11,9 @@
 
 #include "client-server.pb-c.h"
 
+#include "client-server.h"
 #include "client.h"
+
 
 int main(){
 	//Variables
@@ -22,52 +24,86 @@ int main(){
 	int sock_fd;
 	
 	//Proto
-	LOGIN login , *login_response;
-	login__init(&login);
-	char *login_msg, login_response_msg[100];
-	size_t login_size, login_response_size;
+	proto_msg *login_message, *login_response_message;
+	
+	login_response_message = (proto_msg*) malloc(sizeof(proto_msg));
+	if( login_response_message == NULL){
+		perror("proto_message ");
+		exit(-1);
+	}
+	login_response_message->msg = (char *) malloc (100*sizeof(char));
 
 	//Program
 	//Socket
 	sock_fd = iniSocket();
 	
-	
 	//User Interface
 	printf("Username: ");
     fgets(buffer, 100, stdin);
-    login.username = strdup(buffer);
-    
-    //Proto
-    login_size = login__get_packed_size(&login);
-    login_msg = malloc(login_size);
-	login__pack(&login, login_msg);
+	
+	//Login Proto
+	login_message = loginSendProtocol(buffer);
 	
 	//Send Message
-	send(sock_fd, login_msg, login_size, 0);
+	send(sock_fd, login_message->msg, login_message->msg_size, 0);
 	perror("send");
 
 	//Read Message
-	login_response_size = read(sock_fd, &login_response_msg, 100);
+	login_response_message->msg_size = read(sock_fd, login_response_message->msg, 100);
 	
 	//Proto
-	login_response = login__unpack(NULL, login_response_size, login_response_msg);
+	loginReceiveProtocol(login_response_message);
+					
+	exit(0);
+	
+}
+
+proto_msg *loginSendProtocol(char *buffer){
+	proto_msg *proto_message;
+	
+	LOGIN login;
+	login__init(&login);
+	char *login_msg;
+	size_t login_size;
+	
+	proto_message = (proto_msg*) malloc(sizeof(proto_msg));
+	if( proto_message == NULL){
+		perror("proto_message ");
+		exit(-1);
+	}
+	
+	login.username = strdup(buffer);
+	
+	login_size = login__get_packed_size(&login);
+    login_msg = malloc(login_size);
+	login__pack(&login, login_msg);
+	
+	proto_message->msg = login_msg;
+	proto_message->msg_size = login_size;
+	
+	return proto_message;
+}
+
+int loginReceiveProtocol(proto_msg *login_response_message){	
+	LOGIN *login_response;
+	
+	login_response = login__unpack(NULL, login_response_message->msg_size, login_response_message->msg);
 	printf("Response Code: %d\n", login_response->validation);
 	
 	switch ( login_response->validation ) {
 		case 0:
 			printf("User Login with success\n");
-			break;
+			return 0;
 		case 1:
 			printf("Username in use\n");
-			exit(0);
+			return 1;
 		default:
 			printf("Username invalid\n");
-			exit(1);
+			return -1;
 	}
-					
-	exit(0);
-	
+	return 0;
 }
+
 
 int iniSocket(){
 	int sock_fd;
