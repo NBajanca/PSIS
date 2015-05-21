@@ -65,6 +65,7 @@ int main(){
 			}else if (login_status){
 				if(strcmp(command, DISC_STR)==0){
 					printf("Sending DISconnnect command\n");
+					controlProtocol(2);
 					close(sock_fd);
 					login_status= 0;						
 						

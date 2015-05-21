@@ -37,16 +37,37 @@ int loginProtocol(char *buffer){
 }
 
 int chatProtocol(char *buffer){
+	controlProtocol(0);
 
 					
 	return 0;
 }
 
 int queryProtocol(int first_message, int last_message){
-
+	controlProtocol(1);
 					
 	return 0;
 }
+
+//CONTROL
+int controlProtocol(int operation_type){
+	//Prepare message
+	CONTROL control;
+	control__init(&control);
+	control.next_message = operation_type;
+	
+	//Marshal message
+	size_t msg_size = control__get_packed_size(&control);
+	char *msg= malloc(msg_size);
+	control__pack(&control, msg);
+	
+	//Send message
+	send(getSock(), msg, msg_size, 0);
+	perror("send");
+	
+	return 0;
+}
+
 
 //LOGIN
 

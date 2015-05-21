@@ -14,9 +14,9 @@ proto_msg * receiveMessage(int sock){
 	proto_msg * message = createProtoMSG();
 	message->msg_size = read(sock, message->msg, BUFFER_SIZE);
 	
-	//Socket closed by client
+	//Socket closed abruptly
 	if ( message->msg_size == 0){
-		printf("Socket Closed by Client\n");
+		printf("Socket Closed Abruptly\n");
 		destroyProtoMSG(message);
 		return NULL;
 	}
