@@ -12,8 +12,8 @@
 #include "client-server.pb-c.h"
 
 #include "client-server.h"
+#include "client-msg-server.h"
 #include "client.h"
-
 
 #define LOGIN_STR "LOGIN"// username 
 #define DISC_STR "DISC" //Disconnects from server
@@ -46,10 +46,13 @@ int main(){
 		
 		fgets(line, CMD_SIZE, stdin);
 		if(sscanf(line, "%s", command) == 1){
-			if(strcmp(command, LOGIN_STR) == 0){
+			if(strcmp(command, LOGIN_STR) == 0 && !(login_status)){
 				if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
 					printf("Sending LOGIN command (%s)\n", cmd_str_arg);
-					login(cmd_str_arg);
+					if (loginProtocol(cmd_str_arg) == -1){
+						close(sock_fd);
+						should_exit= 1;	
+					}
 				}
 				else{
 					printf("Invalid LOGIN command\n");
@@ -69,6 +72,10 @@ int main(){
 				}else if(strcmp(command, CHAT_STR)==0){
 					if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
 						printf("Sending CHAT command (%s)\n", cmd_str_arg);
+						if (chatProtocol(cmd_str_arg) == -1){
+						close(sock_fd);
+						should_exit= 1;	
+						}
 					
 					}
 					else{
@@ -77,6 +84,10 @@ int main(){
 				}else if(strcmp(command, QUERY_STR)==0){
 					if(sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2){
 						printf("Sending QUERY command (%d %d)\n", cmd_int_arg1, cmd_int_arg2);
+						if (queryProtocol(cmd_int_arg1, cmd_int_arg2) == -1){
+						close(sock_fd);
+						should_exit= 1;	
+						}
 					
 					}
 					else{
@@ -94,76 +105,6 @@ int main(){
 		
 	}
 	exit(0);
-}
-
-void login(char *buffer){
-	//Proto
-	proto_msg * login_message = loginSendProtocol(buffer);
-	
-	//Send Message
-	send(sock_fd, login_message->msg, login_message->msg_size, 0);
-	perror("send");
-	destroyProtoMSG(login_message);
-
-	//Read Message
-	proto_msg * login_response_message = createProtoMSG();
-	login_response_message->msg_size = read(sock_fd, login_response_message->msg, BUFFER_SIZE);
-	
-	//Proto
-	loginReceiveProtocol(login_response_message);
-	destroyProtoMSG(login_response_message);
-					
-	return;
-}
-
-/* loginSendProtocol
- * 
- * Prepares the message regarding LOGIN
- * Does the marshal
- * 
- * @ buffer - Buffer with the user name
- * @ returns proto_message - Marshaled message for the server
- * */
-proto_msg *loginSendProtocol(char *buffer){
-	//Prepare message
-	LOGIN login;
-	login__init(&login);
-	login.username = strdup(buffer);
-	
-	//Marshal message
-	proto_msg * proto_message = protoCreateLogin(&login);
-	
-	return proto_message;
-}
-
-/* loginReceiveProtocol
- * 
- * Deals with Login Message Response from server
- * Does the unmarshal
- * 
- * @ login_response_message - Structure with the login response from the server
- * @ returns int - Login information
- * */
-void loginReceiveProtocol(proto_msg *login_response_message){	
-	LOGIN *login_response;
-	
-	login_response = login__unpack(NULL, login_response_message->msg_size, login_response_message->msg);
-	
-	switch ( login_response->validation ) {
-		case 0:
-			printf("User Login with success\n");
-			login_status = 1;
-			break;
-		case 1:
-			printf("Username in use\n");
-			login_status = 0;
-			break;
-		default:
-			printf("Username invalid\n");
-			login_status = 0;
-			break;
-	}
-	return;
 }
 
 
@@ -194,4 +135,17 @@ int iniSocket(){
 	}
 	
 	return sock_fd;
+}
+
+int getSock(){
+	return sock_fd;
+}
+
+int getLoginStatus(){
+	return login_status;
+}
+
+void setLoginStatus(int status){
+	login_status = status;
+	return;
 }

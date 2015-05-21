@@ -8,6 +8,23 @@
 
 #include "client-server.h"
 
+
+proto_msg * receiveMessage(int sock){
+	//Receive Message
+	proto_msg * message = createProtoMSG();
+	message->msg_size = read(sock, message->msg, BUFFER_SIZE);
+	
+	//Socket closed by client
+	if ( message->msg_size == 0){
+		printf("Socket Closed by Client\n");
+		destroyProtoMSG(message);
+		return NULL;
+	}
+	
+	return message;
+}
+
+
 /* createProtoMSG
  * 
  * Creates Protocol Buffer Structure (MALLOC)
