@@ -2,7 +2,7 @@
 #define HEADER_SERVER
 
 //Socket
-int iniSocket();
+int iniSocket(int port);
 
 //Thread
 void * server_thread(void *arg);

@@ -18,6 +18,10 @@
 #include "server.h"
 #include "server-msg-client.h"
 
+#define LOG_STR "LOG"
+#define QUIT_STR "QUIT"
+#define max( a, b) ( ((a) > (b)) ? (a) : (b) )
+
 void * server_thread(void *arg){
 	Client* user = (Client*) arg;
 	int should_exit = 0;
@@ -46,30 +50,52 @@ int main(){
 	//General
 	char buffer[BUFFER_SIZE];
 	proto_msg *proto_message;
+	int should_exit = 0;
 	
 	//Socket
-	int sock_fd, new_sock;
+	int sock_fd, sock_admin_fd, new_sock, max_fd;
 
 	//Program
 	//Socket
-	sock_fd = iniSocket();
+	sock_fd = iniSocket(3000); //SERVER
+	sock_admin_fd = iniSocket(3001); //ADMIN
 	
 	//User List
 	iniClientDB();
-
 	
-	while(1){
-		new_sock = accept(sock_fd, NULL, NULL);
-		if(sock_fd == -1){
-			perror("Accept (Client) ");
-			exit(-1);
+	//Select
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(sock_admin_fd, &readfds);
+	FD_SET(sock_fd, &readfds);
+	max_fd = max(sock_fd, sock_admin_fd);
+	
+	char line[CMD_SIZE];
+	char command[CMD_SIZE];
+	while(! should_exit){
+		select(max_fd + 1, &readfds, NULL, NULL, NULL);
+		if (FD_ISSET(sock_admin_fd, &readfds)) {
+			fgets(line, CMD_SIZE, stdin);
+			if(sscanf(line, "%s", command) == 1){
+				if(strcmp(command, LOG_STR) == 0){
+					printf("LOG is being processed\n");
+					//LOG print to implement
+				}else if(strcmp(command, QUIT_STR)==0){
+					printf("Shuting down the server\n");
+					should_exit= 1;						
+				}
+			}		
+		}else if (FD_ISSET(sock_fd, &readfds)) {
+			new_sock = accept(sock_fd, NULL, NULL);
+			if(sock_fd == -1){
+				perror("Accept (Client) ");
+				exit(-1);
+			}
+			Client* user = createClient();
+			user->sock = new_sock;
+			
+			pthread_create(&user->thread_id, NULL, server_thread, user);
 		}
-		
-		
-		Client* user = createClient();
-		user->sock = new_sock;
-		
-		pthread_create(&user->thread_id, NULL, server_thread, user);
 	}
 	
 	destroyClientDB();
@@ -85,7 +111,7 @@ int main(){
  * 
  * @ returns sock_fd - Socket descriptor
  * */
-int iniSocket(){
+int iniSocket(int port){
 	int sock_fd;
 	struct sockaddr_in addr, client_addr;
 	int addr_len; 
@@ -97,7 +123,7 @@ int iniSocket(){
 	}
 	
 	addr.sin_family = AF_INET;
-	addr.sin_port = htons(3000);		/*Port*/
+	addr.sin_port = htons(port);		/*Port*/
     addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/	
 
 	
