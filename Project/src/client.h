@@ -2,6 +2,7 @@
 #define HEADER_CLIENT
 
 int iniSocket();
+int handleKeyboard();
 
 int getSock();
 int getLoginStatus();

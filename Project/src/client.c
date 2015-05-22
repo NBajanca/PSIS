@@ -31,80 +31,96 @@ int main(){
 	//Variables
 	//General
 	int should_exit = 0;
-	char line[CMD_SIZE];
-	char command[CMD_SIZE];
-	char cmd_str_arg[CMD_SIZE];
-	int  cmd_int_arg1, cmd_int_arg2;
 	
 	//Program
 	//Socket
 	sock_fd = iniSocket();
 	login_status = 0;
 	
+	//Select
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(STDIN_FILENO, &readfds);
+	FD_SET(sock_fd, &readfds);
 	
 	while(! should_exit){
-		
-		fgets(line, CMD_SIZE, stdin);
-		if(sscanf(line, "%s", command) == 1){
-			if(strcmp(command, LOGIN_STR) == 0 && !(login_status)){
-				if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
-					printf("Sending LOGIN command (%s)\n", cmd_str_arg);
-					if (loginProtocol(cmd_str_arg) == -1){
-						close(sock_fd);
-						should_exit= 1;	
-					}
-				}
-				else{
-					printf("Invalid LOGIN command\n");
-				}
-				
-			}else if(strcmp(command, QUIT_STR)==0){
-				printf("Exiting the app\n");
-				close(sock_fd);
-				should_exit= 1;						
-			}else if (login_status){
-				if(strcmp(command, DISC_STR)==0){
-					printf("Sending DISconnnect command\n");
-					close(sock_fd);
-					login_status= 0;						
-						
-						
-				}else if(strcmp(command, CHAT_STR)==0){
-					if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
-						printf("Sending CHAT command (%s)\n", cmd_str_arg);
-						if (chatProtocol(cmd_str_arg) == -1){
-						close(sock_fd);
-						should_exit= 1;	
-						}
-					
-					}
-					else{
-						printf("Invalid CHAT command\n");
-					}
-				}else if(strcmp(command, QUERY_STR)==0){
-					if(sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2){
-						printf("Sending QUERY command (%d %d)\n", cmd_int_arg1, cmd_int_arg2);
-						if (queryProtocol(cmd_int_arg1, cmd_int_arg2) == -1){
-						close(sock_fd);
-						should_exit= 1;	
-						}
-					
-					}
-					else{
-						printf("Invalid QUERY command\n");
-					}
-				}else{
-					printf("Invalid command\n");
-				}
-			}else{
-					printf("Invalid command - LOGIN Required!\n");
-			}
-		}else{
-			printf("Error in command\n");
+		select(sock_fd + 1, &readfds, NULL, NULL, NULL);
+		if (FD_ISSET(STDIN_FILENO, &readfds)) {
+			should_exit = handleKeyboard(); 
+			
+		}else if (FD_ISSET(sock_fd, &readfds)) {
+			
 		}
-		
 	}
 	exit(0);
+}
+
+int handleKeyboard(){
+	int should_exit = 0;
+	char line[CMD_SIZE];
+	char command[CMD_SIZE];
+	char cmd_str_arg[CMD_SIZE];
+	int  cmd_int_arg1, cmd_int_arg2;
+	
+	fgets(line, CMD_SIZE, stdin);
+	if(sscanf(line, "%s", command) == 1){
+		if(strcmp(command, LOGIN_STR) == 0 && !(login_status)){
+			if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
+				printf("Sending LOGIN command (%s)\n", cmd_str_arg);
+				if (loginProtocol(cmd_str_arg) == -1){
+					close(sock_fd);
+					should_exit= 1;	
+				}
+			}
+			else{
+				printf("Invalid LOGIN command\n");
+			}
+			
+		}else if(strcmp(command, QUIT_STR)==0){
+			printf("Exiting the app\n");
+			close(sock_fd);
+			should_exit= 1;						
+		}else if (login_status){
+			if(strcmp(command, DISC_STR)==0){
+				printf("Sending DISconnnect command\n");
+				close(sock_fd);
+				login_status= 0;						
+					
+					
+			}else if(strcmp(command, CHAT_STR)==0){
+				if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
+					printf("Sending CHAT command (%s)\n", cmd_str_arg);
+					if (chatProtocol(cmd_str_arg) == -1){
+					close(sock_fd);
+					should_exit= 1;	
+					}
+				
+				}
+				else{
+					printf("Invalid CHAT command\n");
+				}
+			}else if(strcmp(command, QUERY_STR)==0){
+				if(sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2){
+					printf("Sending QUERY command (%d %d)\n", cmd_int_arg1, cmd_int_arg2);
+					if (queryProtocol(cmd_int_arg1, cmd_int_arg2) == -1){
+					close(sock_fd);
+					should_exit= 1;	
+					}
+				
+				}
+				else{
+					printf("Invalid QUERY command\n");
+				}
+			}else{
+				printf("Invalid command\n");
+			}
+		}else{
+				printf("Invalid command - LOGIN Required!\n");
+		}
+	}else{
+		printf("Error in command\n");
+	}
+	return should_exit;
 }
 
 
