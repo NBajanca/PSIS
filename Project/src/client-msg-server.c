@@ -75,6 +75,28 @@ int chatProtocol(char *buffer){
 
 
 int queryProtocol(int first_message, int last_message){
+	//Prepare message
+	MESSAGE control;
+	message__init(&control);
+	control.next_message = 1;
+	
+	QUERY query;
+	query__init(&query);
+	query.id_min = first_message;
+	query.id_max = last_message;
+	
+	control.query = &query;
+	
+	//Marshal message
+	size_t msg_size = message__get_packed_size(&control);
+	char *msg= malloc(msg_size);
+	message__pack(&control, msg);
+	
+	//Send message
+	if (send(getSock(), msg, msg_size, 0) == -1){
+		perror("Send (control)");
+		return -1;
+	}
 					
 	return 0;
 }

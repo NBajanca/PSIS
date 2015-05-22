@@ -63,16 +63,21 @@ int controlProtocol(Client* user){
 
 int chatProtocol(Client* user, CHAT *chat){
 	char *time = getTime();
-	
 	printf("(%s) - %s : %s\n", time , user->user_name, chat->message);
-	fflush(stdout);
 	free(time);
+	
+	//IMPLEMENTAR LOG E BROADCAST
 	
 	return 0;
 }
 
 int queryProtocol(Client* user, QUERY *query){
-
+	char *time = getTime();
+	printf("(%s) - %s  QUERY : %d -> %d\n", time , user->user_name, query->id_min, query->id_max);
+	free(time);
+	
+	//IMPLEMENTAR LOG E RESPOSTA
+	
 	return 0;
 }
 
