@@ -49,47 +49,133 @@ void   login__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &login__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
-void   control__init
-                     (CONTROL         *message)
+void   chat__init
+                     (CHAT         *message)
 {
-  static CONTROL init_value = CONTROL__INIT;
+  static CHAT init_value = CHAT__INIT;
   *message = init_value;
 }
-size_t control__get_packed_size
-                     (const CONTROL *message)
+size_t chat__get_packed_size
+                     (const CHAT *message)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &chat__descriptor);
   return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
 }
-size_t control__pack
-                     (const CONTROL *message,
+size_t chat__pack
+                     (const CHAT *message,
                       uint8_t       *out)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &chat__descriptor);
   return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
 }
-size_t control__pack_to_buffer
-                     (const CONTROL *message,
+size_t chat__pack_to_buffer
+                     (const CHAT *message,
                       ProtobufCBuffer *buffer)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &chat__descriptor);
   return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
 }
-CONTROL *
-       control__unpack
+CHAT *
+       chat__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data)
 {
-  return (CONTROL *)
-     protobuf_c_message_unpack (&control__descriptor,
+  return (CHAT *)
+     protobuf_c_message_unpack (&chat__descriptor,
                                 allocator, len, data);
 }
-void   control__free_unpacked
-                     (CONTROL *message,
+void   chat__free_unpacked
+                     (CHAT *message,
                       ProtobufCAllocator *allocator)
 {
-  PROTOBUF_C_ASSERT (message->base.descriptor == &control__descriptor);
+  PROTOBUF_C_ASSERT (message->base.descriptor == &chat__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   query__init
+                     (QUERY         *message)
+{
+  static QUERY init_value = QUERY__INIT;
+  *message = init_value;
+}
+size_t query__get_packed_size
+                     (const QUERY *message)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &query__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t query__pack
+                     (const QUERY *message,
+                      uint8_t       *out)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &query__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t query__pack_to_buffer
+                     (const QUERY *message,
+                      ProtobufCBuffer *buffer)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &query__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+QUERY *
+       query__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (QUERY *)
+     protobuf_c_message_unpack (&query__descriptor,
+                                allocator, len, data);
+}
+void   query__free_unpacked
+                     (QUERY *message,
+                      ProtobufCAllocator *allocator)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &query__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   message__init
+                     (MESSAGE         *message)
+{
+  static MESSAGE init_value = MESSAGE__INIT;
+  *message = init_value;
+}
+size_t message__get_packed_size
+                     (const MESSAGE *message)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &message__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t message__pack
+                     (const MESSAGE *message,
+                      uint8_t       *out)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &message__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t message__pack_to_buffer
+                     (const MESSAGE *message,
+                      ProtobufCBuffer *buffer)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &message__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+MESSAGE *
+       message__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (MESSAGE *)
+     protobuf_c_message_unpack (&message__descriptor,
+                                allocator, len, data);
+}
+void   message__free_unpacked
+                     (MESSAGE *message,
+                      ProtobufCAllocator *allocator)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 const ProtobufCEnumValue login__validation__enum_values_by_number[3] =
@@ -173,37 +259,152 @@ const ProtobufCMessageDescriptor login__descriptor =
   (ProtobufCMessageInit) login__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-const ProtobufCEnumValue control__next__message__enum_values_by_number[3] =
+static const ProtobufCFieldDescriptor chat__field_descriptors[2] =
 {
-  { "CHAT", "CONTROL__NEXT__MESSAGE__CHAT", 0 },
-  { "QUERY", "CONTROL__NEXT__MESSAGE__QUERY", 1 },
-  { "DISC", "CONTROL__NEXT__MESSAGE__DISC", 2 },
+  {
+    "message",
+    30,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(CHAT, message),
+    NULL,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "id",
+    31,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_INT32,
+    PROTOBUF_C_OFFSETOF(CHAT, has_id),
+    PROTOBUF_C_OFFSETOF(CHAT, id),
+    NULL,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
-static const ProtobufCIntRange control__next__message__value_ranges[] = {
+static const unsigned chat__field_indices_by_name[] = {
+  1,   /* field[1] = id */
+  0,   /* field[0] = message */
+};
+static const ProtobufCIntRange chat__number_ranges[1 + 1] =
+{
+  { 30, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor chat__descriptor =
+{
+  PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
+  "CHAT",
+  "CHAT",
+  "CHAT",
+  "",
+  sizeof(CHAT),
+  2,
+  chat__field_descriptors,
+  chat__field_indices_by_name,
+  1,  chat__number_ranges,
+  (ProtobufCMessageInit) chat__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor query__field_descriptors[3] =
+{
+  {
+    "id_min",
+    40,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(QUERY, id_min),
+    NULL,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "id_max",
+    41,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(QUERY, id_max),
+    NULL,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "messages",
+    42,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    PROTOBUF_C_OFFSETOF(QUERY, n_messages),
+    PROTOBUF_C_OFFSETOF(QUERY, messages),
+    &chat__descriptor,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned query__field_indices_by_name[] = {
+  1,   /* field[1] = id_max */
+  0,   /* field[0] = id_min */
+  2,   /* field[2] = messages */
+};
+static const ProtobufCIntRange query__number_ranges[1 + 1] =
+{
+  { 40, 0 },
+  { 0, 3 }
+};
+const ProtobufCMessageDescriptor query__descriptor =
+{
+  PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
+  "QUERY",
+  "QUERY",
+  "QUERY",
+  "",
+  sizeof(QUERY),
+  3,
+  query__field_descriptors,
+  query__field_indices_by_name,
+  1,  query__number_ranges,
+  (ProtobufCMessageInit) query__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+const ProtobufCEnumValue message__next__message__enum_values_by_number[3] =
+{
+  { "CHAT", "MESSAGE__NEXT__MESSAGE__CHAT", 0 },
+  { "QUERY", "MESSAGE__NEXT__MESSAGE__QUERY", 1 },
+  { "DISC", "MESSAGE__NEXT__MESSAGE__DISC", 2 },
+};
+static const ProtobufCIntRange message__next__message__value_ranges[] = {
 {0, 0},{0, 3}
 };
-const ProtobufCEnumValueIndex control__next__message__enum_values_by_name[3] =
+const ProtobufCEnumValueIndex message__next__message__enum_values_by_name[3] =
 {
   { "CHAT", 0 },
   { "DISC", 2 },
   { "QUERY", 1 },
 };
-const ProtobufCEnumDescriptor control__next__message__descriptor =
+const ProtobufCEnumDescriptor message__next__message__descriptor =
 {
   PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
-  "CONTROL.NEXT_MESSAGE",
+  "MESSAGE.NEXT_MESSAGE",
   "NEXT_MESSAGE",
-  "CONTROL__NEXTMESSAGE",
+  "MESSAGE__NEXTMESSAGE",
   "",
   3,
-  control__next__message__enum_values_by_number,
+  message__next__message__enum_values_by_number,
   3,
-  control__next__message__enum_values_by_name,
+  message__next__message__enum_values_by_name,
   1,
-  control__next__message__value_ranges,
+  message__next__message__value_ranges,
   NULL,NULL,NULL,NULL   /* reserved[1234] */
 };
-static const ProtobufCFieldDescriptor control__field_descriptors[2] =
+static const ProtobufCFieldDescriptor message__field_descriptors[3] =
 {
   {
     "next_message",
@@ -211,46 +412,59 @@ static const ProtobufCFieldDescriptor control__field_descriptors[2] =
     PROTOBUF_C_LABEL_REQUIRED,
     PROTOBUF_C_TYPE_ENUM,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(CONTROL, next_message),
-    &control__next__message__descriptor,
+    PROTOBUF_C_OFFSETOF(MESSAGE, next_message),
+    &message__next__message__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "size_next_message",
+    "chat",
     21,
-    PROTOBUF_C_LABEL_REQUIRED,
-    PROTOBUF_C_TYPE_INT32,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
-    PROTOBUF_C_OFFSETOF(CONTROL, size_next_message),
+    PROTOBUF_C_OFFSETOF(MESSAGE, chat),
+    &chat__descriptor,
     NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "query",
+    22,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(MESSAGE, query),
+    &query__descriptor,
     NULL,
     0,            /* packed */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
 };
-static const unsigned control__field_indices_by_name[] = {
+static const unsigned message__field_indices_by_name[] = {
+  1,   /* field[1] = chat */
   0,   /* field[0] = next_message */
-  1,   /* field[1] = size_next_message */
+  2,   /* field[2] = query */
 };
-static const ProtobufCIntRange control__number_ranges[1 + 1] =
+static const ProtobufCIntRange message__number_ranges[1 + 1] =
 {
   { 20, 0 },
-  { 0, 2 }
+  { 0, 3 }
 };
-const ProtobufCMessageDescriptor control__descriptor =
+const ProtobufCMessageDescriptor message__descriptor =
 {
   PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
-  "CONTROL",
-  "CONTROL",
-  "CONTROL",
+  "MESSAGE",
+  "MESSAGE",
+  "MESSAGE",
   "",
-  sizeof(CONTROL),
-  2,
-  control__field_descriptors,
-  control__field_indices_by_name,
-  1,  control__number_ranges,
-  (ProtobufCMessageInit) control__init,
+  sizeof(MESSAGE),
+  3,
+  message__field_descriptors,
+  message__field_indices_by_name,
+  1,  message__number_ranges,
+  (ProtobufCMessageInit) message__init,
   NULL,NULL,NULL    /* reserved[123] */
 };

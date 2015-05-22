@@ -9,7 +9,9 @@ PROTOBUF_C_BEGIN_DECLS
 
 
 typedef struct _LOGIN LOGIN;
-typedef struct _CONTROL CONTROL;
+typedef struct _CHAT CHAT;
+typedef struct _QUERY QUERY;
+typedef struct _MESSAGE MESSAGE;
 
 
 /* --- enums --- */
@@ -19,11 +21,11 @@ typedef enum _LOGIN__VALIDATION {
   LOGIN__VALIDATION__IN_USE = 1,
   LOGIN__VALIDATION__INVALID = 2
 } LOGIN__VALIDATION;
-typedef enum _CONTROL__NEXTMESSAGE {
-  CONTROL__NEXT__MESSAGE__CHAT = 0,
-  CONTROL__NEXT__MESSAGE__QUERY = 1,
-  CONTROL__NEXT__MESSAGE__DISC = 2
-} CONTROL__NEXTMESSAGE;
+typedef enum _MESSAGE__NEXTMESSAGE {
+  MESSAGE__NEXT__MESSAGE__CHAT = 0,
+  MESSAGE__NEXT__MESSAGE__QUERY = 1,
+  MESSAGE__NEXT__MESSAGE__DISC = 2
+} MESSAGE__NEXTMESSAGE;
 
 /* --- messages --- */
 
@@ -39,15 +41,41 @@ struct  _LOGIN
     , NULL, 0,0 }
 
 
-struct  _CONTROL
+struct  _CHAT
 {
   ProtobufCMessage base;
-  CONTROL__NEXTMESSAGE next_message;
-  int32_t size_next_message;
+  char *message;
+  protobuf_c_boolean has_id;
+  int32_t id;
 };
-#define CONTROL__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&control__descriptor) \
-    , 0, 0 }
+#define CHAT__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&chat__descriptor) \
+    , NULL, 0,0 }
+
+
+struct  _QUERY
+{
+  ProtobufCMessage base;
+  int32_t id_min;
+  int32_t id_max;
+  size_t n_messages;
+  CHAT **messages;
+};
+#define QUERY__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&query__descriptor) \
+    , 0, 0, 0,NULL }
+
+
+struct  _MESSAGE
+{
+  ProtobufCMessage base;
+  MESSAGE__NEXTMESSAGE next_message;
+  CHAT *chat;
+  QUERY *query;
+};
+#define MESSAGE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&message__descriptor) \
+    , 0, NULL, NULL }
 
 
 /* LOGIN methods */
@@ -69,32 +97,76 @@ LOGIN *
 void   login__free_unpacked
                      (LOGIN *message,
                       ProtobufCAllocator *allocator);
-/* CONTROL methods */
-void   control__init
-                     (CONTROL         *message);
-size_t control__get_packed_size
-                     (const CONTROL   *message);
-size_t control__pack
-                     (const CONTROL   *message,
+/* CHAT methods */
+void   chat__init
+                     (CHAT         *message);
+size_t chat__get_packed_size
+                     (const CHAT   *message);
+size_t chat__pack
+                     (const CHAT   *message,
                       uint8_t             *out);
-size_t control__pack_to_buffer
-                     (const CONTROL   *message,
+size_t chat__pack_to_buffer
+                     (const CHAT   *message,
                       ProtobufCBuffer     *buffer);
-CONTROL *
-       control__unpack
+CHAT *
+       chat__unpack
                      (ProtobufCAllocator  *allocator,
                       size_t               len,
                       const uint8_t       *data);
-void   control__free_unpacked
-                     (CONTROL *message,
+void   chat__free_unpacked
+                     (CHAT *message,
+                      ProtobufCAllocator *allocator);
+/* QUERY methods */
+void   query__init
+                     (QUERY         *message);
+size_t query__get_packed_size
+                     (const QUERY   *message);
+size_t query__pack
+                     (const QUERY   *message,
+                      uint8_t             *out);
+size_t query__pack_to_buffer
+                     (const QUERY   *message,
+                      ProtobufCBuffer     *buffer);
+QUERY *
+       query__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   query__free_unpacked
+                     (QUERY *message,
+                      ProtobufCAllocator *allocator);
+/* MESSAGE methods */
+void   message__init
+                     (MESSAGE         *message);
+size_t message__get_packed_size
+                     (const MESSAGE   *message);
+size_t message__pack
+                     (const MESSAGE   *message,
+                      uint8_t             *out);
+size_t message__pack_to_buffer
+                     (const MESSAGE   *message,
+                      ProtobufCBuffer     *buffer);
+MESSAGE *
+       message__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   message__free_unpacked
+                     (MESSAGE *message,
                       ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*LOGIN_Closure)
                  (const LOGIN *message,
                   void *closure_data);
-typedef void (*CONTROL_Closure)
-                 (const CONTROL *message,
+typedef void (*CHAT_Closure)
+                 (const CHAT *message,
+                  void *closure_data);
+typedef void (*QUERY_Closure)
+                 (const QUERY *message,
+                  void *closure_data);
+typedef void (*MESSAGE_Closure)
+                 (const MESSAGE *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -104,8 +176,10 @@ typedef void (*CONTROL_Closure)
 
 extern const ProtobufCMessageDescriptor login__descriptor;
 extern const ProtobufCEnumDescriptor    login__validation__descriptor;
-extern const ProtobufCMessageDescriptor control__descriptor;
-extern const ProtobufCEnumDescriptor    control__next__message__descriptor;
+extern const ProtobufCMessageDescriptor chat__descriptor;
+extern const ProtobufCMessageDescriptor query__descriptor;
+extern const ProtobufCMessageDescriptor message__descriptor;
+extern const ProtobufCEnumDescriptor    message__next__message__descriptor;
 
 PROTOBUF_C_END_DECLS
 

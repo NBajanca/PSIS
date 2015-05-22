@@ -24,6 +24,17 @@ proto_msg * receiveMessage(int sock){
 	return message;
 }
 
+int sendMessage(proto_msg * message, int sock){
+	if (send(sock, message->msg, message->msg_size, 0) == -1){
+		perror("send");
+		destroyProtoMSG(message);
+		return -1;
+	}
+	
+	destroyProtoMSG(message);
+	return 0;
+}
+
 
 /* createProtoMSG
  * 
@@ -80,14 +91,13 @@ proto_msg* protoCreateLogin(LOGIN * login){
  * @ control_msg - Protocol buffer to marshal
  * @ returns proto_message
  * */
-proto_msg* protoCreateControl(CONTROL * control_msg){
+proto_msg* protoCreateMessage(MESSAGE * control_msg){
 	proto_msg * proto_message = createProtoMSG();
 	free(proto_message->msg);
 	
-	proto_message->msg_size = control__get_packed_size(control_msg);
+	proto_message->msg_size = message__get_packed_size(control_msg);
 	proto_message->msg = malloc(proto_message->msg_size);
-	control__pack(control_msg, proto_message->msg);
+	message__pack(control_msg, proto_message->msg);
 	
 	return proto_message;
 }
-

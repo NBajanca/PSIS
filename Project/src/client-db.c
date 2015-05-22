@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "client-db.h"
+#include "server.h"
 
 ClientDB *client_db;
 
@@ -77,7 +78,9 @@ int addClient(Client* client){
 	if (aux == NULL){
 		client_db->first = client;
 		client_db->counter ++;
-		printf("First User Joined (%s)\n", client->user_name);
+		char *time = getTime();
+		printf("(%s) - First User Joined (%s)\n", time, client->user_name);
+		free(time);
 	}else{	
 		while(aux->next != NULL){
 			if (strcmp(aux->user_name, client->user_name) == 0) return -1;
@@ -86,8 +89,9 @@ int addClient(Client* client){
 		if (strcmp(aux->user_name, client->user_name) == 0) return -1;
 		aux->next = client;
 		client_db->counter ++;
-		printf("New User Joined (%s)\n", client->user_name);
-		
+		char *time = getTime();
+		printf("(%s) - New User Joined (%s)\n", time, client->user_name);
+		free(time);
 	}
 	fflush( stdout );
 	return 0;
@@ -117,7 +121,9 @@ void removeClient(Client* client){
 			aux = aux->next;
 		}
 	}
-	printf("Client LogOut (%s)\n", client->user_name);
+	char *time = getTime();
+	printf("(%s) - Client LogOut (%s)\n", time, client->user_name);
+	free(time);
 	destroyClient(client);
 	return;
 }

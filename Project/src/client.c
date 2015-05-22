@@ -65,7 +65,6 @@ int main(){
 			}else if (login_status){
 				if(strcmp(command, DISC_STR)==0){
 					printf("Sending DISconnnect command\n");
-					controlProtocol(2);
 					close(sock_fd);
 					login_status= 0;						
 						
@@ -121,8 +120,8 @@ int iniSocket(){
 	struct sockaddr_in server_addr;
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	perror("socket ");
 	if(sock_fd == -1){
+		perror("socket ");
 		exit(-1);
 	}
 

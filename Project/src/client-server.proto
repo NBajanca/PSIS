@@ -10,7 +10,20 @@ message LOGIN{
 	optional VALIDATION validation = 11;
 }
 
-message CONTROL{
+message CHAT{
+	required string message = 30;
+	optional int32 id = 31;
+
+}
+
+message QUERY{
+	required int32 id_min = 40;
+	required int32 id_max = 41;
+
+	repeated CHAT messages = 42;
+}
+
+message MESSAGE{
 	enum NEXT_MESSAGE {
 	    CHAT = 0;
 	    QUERY = 1;
@@ -18,6 +31,6 @@ message CONTROL{
 	  }
 
 	required NEXT_MESSAGE next_message = 20;
-	required int32 size_next_message = 21;
-
+	optional CHAT chat = 21;
+	optional QUERY query = 22;
 }

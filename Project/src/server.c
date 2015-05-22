@@ -32,18 +32,7 @@ void * server_thread(void *arg){
 	
 	//Comunication with Client
 	while(! should_exit){
-		
-		switch (controlProtocol(user)){
-			case 0:
-				if (chatProtocol(user) == -1) should_exit = 1;
-				break;
-			case 1:
-				if (queryProtocol(user) == -1) should_exit = 1;
-				break;
-			default :
-				should_exit = 1;
-				break;
-		}
+		if (controlProtocol(user) != 0) should_exit = 1;
 	}
 	
 	//Close Connection
@@ -71,7 +60,11 @@ int main(){
 	
 	while(1){
 		new_sock = accept(sock_fd, NULL, NULL);
-		perror("accept");
+		if(sock_fd == -1){
+			perror("Accept (Client) ");
+			exit(-1);
+		}
+		
 		
 		Client* user = createClient();
 		user->sock = new_sock;
@@ -98,8 +91,8 @@ int iniSocket(){
 	int addr_len; 
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	perror("socket ");
 	if(sock_fd == -1){
+		perror("Socket ");
 		exit(-1);
 	}
 	
@@ -108,13 +101,27 @@ int iniSocket(){
     addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/	
 
 	
-	bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr));
-	perror("bind");
-	
-	if( listen(sock_fd, 10) == -1){
-		perror("listen ");
+	if( bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr)) == -1){
+		perror("Bind ");
 		exit(-1);
 	}
 	
+	if( listen(sock_fd, 10) == -1){
+		perror("Listen ");
+		
+	}
+	
 	return sock_fd;
+}
+
+char * getTime(){
+	char *time_string;
+	time_string = (char *) malloc( CMD_SIZE * sizeof(char));
+
+	time_t t = time(NULL);
+	struct tm * p = localtime(&t);
+
+	strftime(time_string, CMD_SIZE, "%F, %T", p);
+	
+	return time_string;
 }

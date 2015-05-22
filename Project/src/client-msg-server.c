@@ -13,6 +13,7 @@
 
 #include "client-server.h"
 #include "client-msg-server.h"
+#include "server.h"
 
 
 //Message Processing
@@ -36,41 +37,50 @@ int loginProtocol(char *buffer){
 	return 0;
 }
 
+/*chatProtocol
+ * Receives a chat message from client and sends it to the server.
+ * 
+ * Description:
+ * First advises the server that the incoming message is a chat and then sends the chat.
+ * 
+ * @ buffer - string containing the message to send.
+ * @ returns int - (-1) on error or (0) on success.
+ * */
 int chatProtocol(char *buffer){
-	controlProtocol(0);
-
-					
-	return 0;
-}
-
-int queryProtocol(int first_message, int last_message){
-	controlProtocol(1);
-					
-	return 0;
-}
-
-//CONTROL
-int controlProtocol(int operation_type){
 	//Prepare message
-	CONTROL control;
-	control__init(&control);
-	control.next_message = operation_type;
+	MESSAGE control;
+	message__init(&control);
+	control.next_message = 0;
+	
+	CHAT chat;
+	chat__init(&chat);
+	chat.message = strdup(buffer);
+	
+	//CHAT chat_message = chatSendProto(buffer);
+	control.chat = &chat;
 	
 	//Marshal message
-	size_t msg_size = control__get_packed_size(&control);
+	size_t msg_size = message__get_packed_size(&control);
 	char *msg= malloc(msg_size);
-	control__pack(&control, msg);
+	message__pack(&control, msg);
 	
 	//Send message
-	send(getSock(), msg, msg_size, 0);
-	perror("send");
+	if (send(getSock(), msg, msg_size, 0) == -1){
+		perror("Send (control)");
+		return -1;
+	}
 	
+	return 0;
+}
+
+
+int queryProtocol(int first_message, int last_message){
+					
 	return 0;
 }
 
 
 //LOGIN
-
 /* loginSendProtocol
  * 
  * Prepares the message regarding LOGIN

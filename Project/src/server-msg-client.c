@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
+#include <time.h>
+
 #include "client-server.pb-c.h"
 
 #include "client-server.h"
@@ -18,26 +20,10 @@
 
 
 //Message Processing
-int controlProtocol(Client* user){
-	//Receive Message
-	proto_msg * control_message = receiveMessage(user->sock);
-	if ( control_message == NULL){
-		return -1;
-	}
-	
-	//Unmarshal incoming message
-	CONTROL *control = control__unpack(NULL, control_message->msg_size, control_message->msg);
-	destroyProtoMSG(control_message);
-	
-	return control->next_message;
-}
-
 int loginProtocol(Client* user){
 	//Receive Message
 	proto_msg * login_message = receiveMessage(user->sock);
-	if ( login_message == NULL){
-		return -1;
-	}
+	if (login_message == NULL) return -1;
 	
 	//Login Protocol - PROTO and CLIENTDB
 	proto_msg * proto_message = loginProto(login_message, user);
@@ -50,12 +36,42 @@ int loginProtocol(Client* user){
 	return 0;
 }
 
-int chatProtocol(Client* user){
+int controlProtocol(Client* user){
+	//Receive Message
+	proto_msg * control_message = receiveMessage(user->sock);
+	if (control_message == NULL) return -1;
+	
+	//Unmarshal incoming message
+	MESSAGE *control = message__unpack(NULL, control_message->msg_size, control_message->msg);
+	destroyProtoMSG(control_message);
+	fflush(stdout);
+	
+	switch (control->next_message){
+		case 0:
+			if (chatProtocol(user,control->chat) == -1) return -1;
+			break;
+		case 1:
+			if (queryProtocol(user, control->query) == -1)return -1;
+			break;
+		case 2:
+			return 1;
+			break;
+	}
+	
+	return ;
+}
+
+int chatProtocol(Client* user, CHAT *chat){
+	char *time = getTime();
+	
+	printf("(%s) - %s : %s\n", time , user->user_name, chat->message);
+	fflush(stdout);
+	free(time);
 	
 	return 0;
 }
 
-int queryProtocol(Client* user){
+int queryProtocol(Client* user, QUERY *query){
 
 	return 0;
 }
@@ -95,3 +111,5 @@ proto_msg *loginProto(proto_msg * login_message, Client* user){
 	
 	return proto_message;
 }
+
+

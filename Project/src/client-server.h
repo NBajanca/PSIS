@@ -10,10 +10,14 @@ typedef struct proto_msg {
 } proto_msg;
 
 proto_msg * receiveMessage(int sock);
+int sendMessage(proto_msg * message, int sock);
+
+proto_msg* createProtoMSG();
+void destroyProtoMSG(proto_msg* proto_message);
+
 
 proto_msg* protoCreateLogin(LOGIN * login_response);
-void destroyProtoMSG(proto_msg* proto_message);
-proto_msg* createProtoMSG();
+proto_msg* protoCreateMessage(MESSAGE * control_msg);
 
 
 #endif
