@@ -178,6 +178,49 @@ void   message__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &message__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   admin__init
+                     (ADMIN         *message)
+{
+  static ADMIN init_value = ADMIN__INIT;
+  *message = init_value;
+}
+size_t admin__get_packed_size
+                     (const ADMIN *message)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &admin__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t admin__pack
+                     (const ADMIN *message,
+                      uint8_t       *out)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &admin__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t admin__pack_to_buffer
+                     (const ADMIN *message,
+                      ProtobufCBuffer *buffer)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &admin__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+ADMIN *
+       admin__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (ADMIN *)
+     protobuf_c_message_unpack (&admin__descriptor,
+                                allocator, len, data);
+}
+void   admin__free_unpacked
+                     (ADMIN *message,
+                      ProtobufCAllocator *allocator)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &admin__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 const ProtobufCEnumValue login__validation__enum_values_by_number[3] =
 {
   { "OK", "LOGIN__VALIDATION__OK", 0 },
@@ -466,5 +509,86 @@ const ProtobufCMessageDescriptor message__descriptor =
   message__field_indices_by_name,
   1,  message__number_ranges,
   (ProtobufCMessageInit) message__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+const ProtobufCEnumValue admin__action__enum_values_by_number[3] =
+{
+  { "LOG", "ADMIN__ACTION__LOG", 0 },
+  { "QUIT", "ADMIN__ACTION__QUIT", 1 },
+  { "DISC", "ADMIN__ACTION__DISC", 2 },
+};
+static const ProtobufCIntRange admin__action__value_ranges[] = {
+{0, 0},{0, 3}
+};
+const ProtobufCEnumValueIndex admin__action__enum_values_by_name[3] =
+{
+  { "DISC", 2 },
+  { "LOG", 0 },
+  { "QUIT", 1 },
+};
+const ProtobufCEnumDescriptor admin__action__descriptor =
+{
+  PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
+  "ADMIN.ACTION",
+  "ACTION",
+  "ADMIN__ACTION",
+  "",
+  3,
+  admin__action__enum_values_by_number,
+  3,
+  admin__action__enum_values_by_name,
+  1,
+  admin__action__value_ranges,
+  NULL,NULL,NULL,NULL   /* reserved[1234] */
+};
+static const ProtobufCFieldDescriptor admin__field_descriptors[2] =
+{
+  {
+    "action",
+    30,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_ENUM,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(ADMIN, action),
+    &admin__action__descriptor,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "log",
+    31,
+    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(ADMIN, log),
+    NULL,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned admin__field_indices_by_name[] = {
+  0,   /* field[0] = action */
+  1,   /* field[1] = log */
+};
+static const ProtobufCIntRange admin__number_ranges[1 + 1] =
+{
+  { 30, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor admin__descriptor =
+{
+  PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
+  "ADMIN",
+  "ADMIN",
+  "ADMIN",
+  "",
+  sizeof(ADMIN),
+  2,
+  admin__field_descriptors,
+  admin__field_indices_by_name,
+  1,  admin__number_ranges,
+  (ProtobufCMessageInit) admin__init,
   NULL,NULL,NULL    /* reserved[123] */
 };

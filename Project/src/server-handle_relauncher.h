@@ -1,0 +1,6 @@
+#ifndef HEADER_SERVER_HANDLE_RELAUNCHER
+#define HEADER_SERVER_HANDLE_RELAUNCHER
+
+int handleRelauncher();
+
+#endif

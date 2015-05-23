@@ -5,66 +5,10 @@
 #include <unistd.h>
 
 #include "client-server.pb-c.h"
+#include "coms.h"
 
 #include "client-server.h"
 
-
-proto_msg * receiveMessage(int sock){
-	//Receive Message
-	proto_msg * message = createProtoMSG();
-	message->msg_size = read(sock, message->msg, BUFFER_SIZE);
-	
-	//Socket closed abruptly
-	if ( message->msg_size == 0){
-		printf("Socket Closed Abruptly\n");
-		destroyProtoMSG(message);
-		return NULL;
-	}
-	
-	return message;
-}
-
-int sendMessage(proto_msg * message, int sock){
-	if (send(sock, message->msg, message->msg_size, 0) == -1){
-		perror("send");
-		destroyProtoMSG(message);
-		return -1;
-	}
-	
-	destroyProtoMSG(message);
-	return 0;
-}
-
-
-/* createProtoMSG
- * 
- * Creates Protocol Buffer Structure (MALLOC)
- * 
- * @ returns proto_message
- * */
-proto_msg* createProtoMSG(){
-	proto_msg* proto_message = (proto_msg*) malloc(sizeof(proto_msg));
-	if( proto_message == NULL){
-		perror("proto_message malloc ");
-		exit(-1);
-	}
-	proto_message->msg = (char *) malloc (BUFFER_SIZE*sizeof(char));
-	
-	return proto_message;
-}
-
-/* destroyProtoMSG
- * 
- * Frees Protocol Buffer Structure (MALLOC)
- * 
- * @ proto_message
- * */
-void destroyProtoMSG(proto_msg* proto_message){
-	free(proto_message->msg);
-	free(proto_message);
-	
-	return;
-}
 
 /* protoCreateLogin
  * 
@@ -74,8 +18,7 @@ void destroyProtoMSG(proto_msg* proto_message){
  * @ returns proto_message
  * */
 proto_msg* protoCreateLogin(LOGIN * login){
-	proto_msg * proto_message = createProtoMSG();
-	free(proto_message->msg);
+	proto_msg * proto_message = createProtoMSG(DONT_ALLOC_MSG);
 	
 	proto_message->msg_size = login__get_packed_size(login);
 	proto_message->msg = malloc(proto_message->msg_size);
@@ -92,8 +35,7 @@ proto_msg* protoCreateLogin(LOGIN * login){
  * @ returns proto_message
  * */
 proto_msg* protoCreateMessage(MESSAGE * control_msg){
-	proto_msg * proto_message = createProtoMSG();
-	free(proto_message->msg);
+	proto_msg * proto_message = createProtoMSG(DONT_ALLOC_MSG);
 	
 	proto_message->msg_size = message__get_packed_size(control_msg);
 	proto_message->msg = malloc(proto_message->msg_size);

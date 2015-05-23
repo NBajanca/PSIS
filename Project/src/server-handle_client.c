@@ -9,15 +9,74 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 
-#include <time.h>
+#include <pthread.h>
 
-#include "client-server.pb-c.h"
+#include "server-handle_client.h"
 
-#include "client-server.h"
-#include "client-db.h"
-#include "server.h"
-#include "server-msg-client.h"
+void * client_thread(void *arg){
+	Client* user = (Client*) arg;
+	int should_exit = 0;
+	
+	//Login Process
+	do{
+		if (loginProtocol(user) == -1){
+			close(user->sock);
+			pthread_exit(NULL);
+			break;
+		}
+	}while (user->user_name == NULL);
+	//Comunication with Client
+	while(! should_exit){
+		if (controlProtocol(user) != 0) should_exit = 1;
+	}
+	//Close Connection
+	close(user->sock);
+	removeClient(user);
+	pthread_exit(NULL);
+}
 
+void * server_thread(void *arg){
+	//Variables
+	//General
+	int should_exit = 0;
+	
+	//Socket
+	int sock_fd, new_sock;
+		
+	//Program
+	//Socket
+	sock_fd = iniClientSocket();
+	
+	//User List
+	iniClientDB();
+	
+	while (!should_exit){
+		new_sock = accept(sock_fd, NULL, NULL);
+		if(sock_fd == -1){
+			perror("Accept (Client) ");
+			exit(-1);
+		}
+		Client* user = createClient();
+		user->sock = new_sock;
+		
+		pthread_create(&user->thread_id, NULL, client_thread, user);
+	}
+	
+	//Close Connection
+	close(sock_fd);
+	destroyClientDB();
+	pthread_exit(NULL);
+}
+
+int handleClient(){
+	printf("Initializing Client Handler\n");
+	
+	pthread_t server_thread_id;
+	pthread_create(&server_thread_id, NULL, server_thread, NULL);
+	
+	printf("Client Handler Ready\n");
+	return 0;
+}
 
 //Message Processing
 int loginProtocol(Client* user){
@@ -103,7 +162,9 @@ proto_msg *loginProto(proto_msg * login_message, Client* user){
 	login_response.username = strdup(login->username);
 	login_response.has_validation = 1;
 	
+	
 	user->user_name = strdup(login->username);
+	
 	if (addClient(user) != -1){
 		login_response.validation = 0;
 	}else{
@@ -118,3 +179,31 @@ proto_msg *loginProto(proto_msg * login_message, Client* user){
 }
 
 
+int iniClientSocket(){
+	int sock_fd;
+	struct sockaddr_in addr, client_addr;
+	int addr_len; 
+	
+	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if(sock_fd == -1){
+		perror("Socket (Client) ");
+		exit(-1);
+	}
+	
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(3000);		/*Port*/
+    addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/	
+
+	
+	if( bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr)) == -1){
+		perror("Bind (Client) ");
+		exit(-1);
+	}
+	
+	if( listen(sock_fd, 10) == -1){
+		perror("Listen (Client) ");
+		exit(-1);
+	}
+	
+	return sock_fd;
+}

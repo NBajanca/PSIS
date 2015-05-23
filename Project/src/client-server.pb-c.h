@@ -12,6 +12,7 @@ typedef struct _LOGIN LOGIN;
 typedef struct _CHAT CHAT;
 typedef struct _QUERY QUERY;
 typedef struct _MESSAGE MESSAGE;
+typedef struct _ADMIN ADMIN;
 
 
 /* --- enums --- */
@@ -26,6 +27,11 @@ typedef enum _MESSAGE__NEXTMESSAGE {
   MESSAGE__NEXT__MESSAGE__QUERY = 1,
   MESSAGE__NEXT__MESSAGE__DISC = 2
 } MESSAGE__NEXTMESSAGE;
+typedef enum _ADMIN__ACTION {
+  ADMIN__ACTION__LOG = 0,
+  ADMIN__ACTION__QUIT = 1,
+  ADMIN__ACTION__DISC = 2
+} ADMIN__ACTION;
 
 /* --- messages --- */
 
@@ -76,6 +82,17 @@ struct  _MESSAGE
 #define MESSAGE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&message__descriptor) \
     , 0, NULL, NULL }
+
+
+struct  _ADMIN
+{
+  ProtobufCMessage base;
+  ADMIN__ACTION action;
+  char *log;
+};
+#define ADMIN__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&admin__descriptor) \
+    , 0, NULL }
 
 
 /* LOGIN methods */
@@ -154,6 +171,25 @@ MESSAGE *
 void   message__free_unpacked
                      (MESSAGE *message,
                       ProtobufCAllocator *allocator);
+/* ADMIN methods */
+void   admin__init
+                     (ADMIN         *message);
+size_t admin__get_packed_size
+                     (const ADMIN   *message);
+size_t admin__pack
+                     (const ADMIN   *message,
+                      uint8_t             *out);
+size_t admin__pack_to_buffer
+                     (const ADMIN   *message,
+                      ProtobufCBuffer     *buffer);
+ADMIN *
+       admin__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   admin__free_unpacked
+                     (ADMIN *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*LOGIN_Closure)
@@ -168,6 +204,9 @@ typedef void (*QUERY_Closure)
 typedef void (*MESSAGE_Closure)
                  (const MESSAGE *message,
                   void *closure_data);
+typedef void (*ADMIN_Closure)
+                 (const ADMIN *message,
+                  void *closure_data);
 
 /* --- services --- */
 
@@ -180,6 +219,8 @@ extern const ProtobufCMessageDescriptor chat__descriptor;
 extern const ProtobufCMessageDescriptor query__descriptor;
 extern const ProtobufCMessageDescriptor message__descriptor;
 extern const ProtobufCEnumDescriptor    message__next__message__descriptor;
+extern const ProtobufCMessageDescriptor admin__descriptor;
+extern const ProtobufCEnumDescriptor    admin__action__descriptor;
 
 PROTOBUF_C_END_DECLS
 

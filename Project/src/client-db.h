@@ -15,8 +15,10 @@ typedef struct ClientDB {
 
 void iniClientDB();
 void destroyClientDB();
+
 Client* createClient();
 void destroyClient(Client* client);
+
 int addClient(Client* client);
 void removeClient(Client* client);
 

@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #include "client-db.h"
-#include "server.h"
+#include "log.h"
 
 ClientDB *client_db;
 
