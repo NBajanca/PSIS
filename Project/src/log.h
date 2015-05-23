@@ -9,4 +9,6 @@ void destroyLog();
 char * getTime();
 void addToLog(proto_msg * message_to_log);
 
+proto_msg *getLog();
+
 #endif

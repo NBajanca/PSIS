@@ -52,3 +52,22 @@ void addToLog(proto_msg * message_to_log){
 	destroyProtoMSG(message_to_log);
 	return;
 }
+
+proto_msg *getLog(){
+	proto_msg * message = createProtoMSG(DONT_ALLOC_MSG);
+	
+	FILE *log_file = fopen("log.txt", "rb");
+	
+	pthread_mutex_lock (&log_mutex);
+	fseek(log_file, 0, SEEK_END);
+	message->msg_size = ftell(log_file);
+	rewind(log_file);
+	
+	message->msg = malloc(message->msg_size * (sizeof(char)));
+	fread(message->msg, sizeof(char), message->msg_size, log_file);
+	pthread_mutex_unlock (&log_mutex);
+	
+	fclose(log_file);
+	
+	return message;
+}

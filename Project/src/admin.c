@@ -75,6 +75,7 @@ int sendRequest(int action){
 	ADMIN message;
 	admin__init(&message);
 	message.action = action;
+	
 	proto_msg* disconnect_message = protoCreateAdmin(&message);
 
 	return sendMessage( disconnect_message , sock_fd);
@@ -83,6 +84,20 @@ int sendRequest(int action){
 int receiveLog(){
 	printf("Receiving LOG request from server\n");
 	
+	proto_msg * message = createProtoMSG( DONT_ALLOC_MSG );
+	message->msg = malloc(LOG_SIZE * (sizeof(char)));
+	message->msg_size = read(sock_fd, message->msg, LOG_SIZE);
+	//Socket closed abruptly
+	if ( message->msg_size == 0){
+		printf("Socket Closed Abruptly\n");
+		close(sock_fd);
+		destroyProtoMSG(message);
+		return -1;
+	}
+	ADMIN *admin = admin__unpack(NULL, message->msg_size, message->msg);
+	printf("%s", admin->log);
+	destroyProtoMSG(message);
+	admin__free_unpacked(admin, NULL);
 	return 0;
 }
 

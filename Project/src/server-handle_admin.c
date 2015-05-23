@@ -103,6 +103,18 @@ int sendLog(int sock_fd){
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Sending LOG to Admin");
 	addToLog(message_to_log);
 	
+	ADMIN message;
+	admin__init(&message);
+	message.action = 0;
+	
+	proto_msg* log_string = getLog();
+	message.log = log_string->msg;
+	
+	proto_msg* log_message = protoCreateAdmin(&message);
+	destroyProtoMSG(log_string);
+	
+	if (sendMessage(log_message,  sock_fd) == -1) return -1;
+	
 	return 0;
 }
 
