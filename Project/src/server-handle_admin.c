@@ -25,7 +25,7 @@ int handleAdmin(){
 	while(1){
 		if (handleNewAdmin (sock_fd) != 0) break;
 	}
-	
+	close(sock_fd);
 	return 0;
 }
 
@@ -90,7 +90,7 @@ int iniSocket(){
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock_fd == -1){
-		perror("Socket ");
+		perror("Socket (Admin) ");
 		exit(-1);
 	}
 	
@@ -99,12 +99,12 @@ int iniSocket(){
     addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/
 
 	if( bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr)) == -1){
-		perror("Bind ");
+		perror("Bind (Admin) ");
 		exit(-1);
 	}
 	
 	if( listen(sock_fd, 1) == -1){
-		perror("Listen ");
+		perror("Listen (Admin) ");
 		
 	}
 	
