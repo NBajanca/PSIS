@@ -65,7 +65,9 @@ void * server_thread(void *arg){
 	while (!should_exit){
 		new_sock = accept(sock_fd, NULL, NULL);
 		if(sock_fd == -1){
-			perror("Accept (Client) ");
+			proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Accept (Client) : %s", strerror(errno));
+			addToLog(message_to_log);
 			exit(-1);
 		}
 		Client* user = createClient();
@@ -81,12 +83,16 @@ void * server_thread(void *arg){
 }
 
 int handleClient(){
-	printf("Initializing Client Handler\n");
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Initializing Client Handler");
+	addToLog(message_to_log);
 	
 	pthread_t server_thread_id;
 	pthread_create(&server_thread_id, NULL, server_thread, NULL);
 	
-	printf("Client Handler Ready\n");
+	message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Client Handler Ready");
+	addToLog(message_to_log);
 	return 0;
 }
 
@@ -133,9 +139,9 @@ int controlProtocol(Client* user){
 }
 
 int chatProtocol(Client* user, CHAT *chat){
-	char *time = getTime();
-	printf("(%s) - %s : %s\n", time , user->user_name, chat->message);
-	free(time);
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"%s : %s",user->user_name, chat->message);
+	addToLog(message_to_log);
 	
 	//IMPLEMENTAR LOG E BROADCAST
 	
@@ -143,9 +149,9 @@ int chatProtocol(Client* user, CHAT *chat){
 }
 
 int queryProtocol(Client* user, QUERY *query){
-	char *time = getTime();
-	printf("(%s) - %s  QUERY : %d -> %d\n", time , user->user_name, query->id_min, query->id_max);
-	free(time);
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"%s  QUERY : %d -> %d",user->user_name, query->id_min, query->id_max);
+	addToLog(message_to_log);
 	
 	//IMPLEMENTAR LOG E RESPOSTA
 	
@@ -198,7 +204,9 @@ int iniClientSocket(){
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock_fd == -1){
-		perror("Socket (Client) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Socket (Client) : %s", strerror(errno));
+		addToLog(message_to_log);
 		exit(-1);
 	}
 	
@@ -208,12 +216,16 @@ int iniClientSocket(){
 
 	
 	if( bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr)) == -1){
-		perror("Bind (Client) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Bind (Client) : %s", strerror(errno));
+		addToLog(message_to_log);
 		exit(-1);
 	}
 	
 	if( listen(sock_fd, 10) == -1){
-		perror("Listen (Client) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Listen (Client) : %s", strerror(errno));
+		addToLog(message_to_log);
 		exit(-1);
 	}
 	

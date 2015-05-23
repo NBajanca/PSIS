@@ -13,14 +13,20 @@
 #include "client-server.pb-c.h"
 #include "coms.h"
 #include "server-admin.h"
+#include "log.h"
 
 
 
 int handleAdmin(){
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Initializing Admin Handler");
+	addToLog(message_to_log);
 	
-	printf("Initializing Admin Handler\n");
 	int sock_fd = iniSocket();
-	printf("Admin Handler Ready\n");
+	
+	message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Admin Handler Ready");
+	addToLog(message_to_log);
 	
 	while(1){
 		if (handleNewAdmin (sock_fd) != 0) break;
@@ -31,14 +37,19 @@ int handleAdmin(){
 
 int handleNewAdmin (int sock_fd){
 	int action = 0; 
+	proto_msg * message_to_log;
 	
 	//Acept New Admin
 	int new_sock_fd = accept(sock_fd, NULL, NULL);
 	if(new_sock_fd == -1){
-		perror("Accept (Admin) ");
+		message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Accept (Admin) : %s", strerror(errno));
+		addToLog(message_to_log);
 		exit(-1);
 	}
-	printf("Admin LogIn\n");
+	message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Admin LogIn");
+	addToLog(message_to_log);
 	
 	//Handle Admin Requests
 	while(!action){
@@ -46,7 +57,9 @@ int handleNewAdmin (int sock_fd){
 	}
 	
 	//Close Admin Connection
-	printf("Admin LogOut\n");
+	message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Admin LogOut");
+	addToLog(message_to_log);
 	close(new_sock_fd);
 	
 	if (action == 1) return 1;
@@ -61,16 +74,24 @@ int handleAdminRequests(int sock_fd){
 	ADMIN *admin = admin__unpack(NULL, message->msg_size, message->msg);
 	destroyProtoMSG(message);
 	
+	proto_msg *message_to_log;
+	
 	switch (admin->action){
 		case 0:
-			printf("Received LOG request from Admin\n");
+			message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Received LOG request from Admin");
+			addToLog(message_to_log);
 			sendLog(sock_fd);
 			break;
 		case 1:
-			printf("Received QUIT request from Admin\n");
+			message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Received QUIT request from Admin");
+			addToLog(message_to_log);
 			return 1;
 		case 2:
-			printf("Received DISC request from Admin\n");
+			message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Received DISC request from Admin");
+			addToLog(message_to_log);
 			return 2;
 			break;
 	}
@@ -78,7 +99,9 @@ int handleAdminRequests(int sock_fd){
 }
 
 int sendLog(int sock_fd){
-	printf("Sending LOG to Admin\n");
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Sending LOG to Admin");
+	addToLog(message_to_log);
 	
 	return 0;
 }
@@ -90,7 +113,9 @@ int iniSocket(){
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock_fd == -1){
-		perror("Socket (Admin) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Socket (Admin) : %s", strerror(errno));
+		addToLog(message_to_log);
 		exit(-1);
 	}
 	
@@ -99,13 +124,17 @@ int iniSocket(){
     addr.sin_addr.s_addr = INADDR_ANY;	/*IP*/
 
 	if( bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr)) == -1){
-		perror("Bind (Admin) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Bind (Admin) : %s", strerror(errno));
+		addToLog(message_to_log);
 		exit(-1);
 	}
 	
 	if( listen(sock_fd, 1) == -1){
-		perror("Listen (Admin) ");
-		
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Listen (Admin) : %s", strerror(errno));
+		addToLog(message_to_log);
+		exit(-1);
 	}
 	
 	return sock_fd;

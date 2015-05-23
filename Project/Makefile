@@ -32,7 +32,7 @@ $(EXE_DIR)/server: $(OBJ_DIR)/server.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/server-h
 	$(CC) $(OBJ_DIR)/server.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/server-handle_client.o $(OBJ_DIR)/server-handle_admin.o $(OBJ_DIR)/server-handle_relauncher.o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-admin.o $(OBJ_DIR)/log.o $(OBJ_DIR)/client-db.o $(OBJ_DIR)/client-server.o -o $(EXE_DIR)/server $(PROTO_FLAGS) $(THREAD_FLAGS)
 
 #Server Object
-$(OBJ_DIR)/server.o: $(SRC_DIR)/server.c $(SRC_DIR)/server-handle_client.h $(SRC_DIR)/server-handle_admin.h $(SRC_DIR)/server-handle_relauncher.h
+$(OBJ_DIR)/server.o: $(SRC_DIR)/server.c $(SRC_DIR)/server-handle_client.h $(SRC_DIR)/server-handle_admin.h $(SRC_DIR)/server-handle_relauncher.h $(SRC_DIR)/log.h
 	$(CC) -c $(SRC_DIR)/server.c -o $(OBJ_DIR)/server.o
 	
 #Server-handle_Client Object

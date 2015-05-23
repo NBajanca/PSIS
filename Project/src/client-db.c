@@ -104,9 +104,9 @@ int addClient(Client* client){
 	//End of critical zone
 	pthread_mutex_unlock (&client_mutex);
 	
-	char *time = getTime();
-	printf("(%s) - New User Joined (%s)\n", time, client->user_name);
-	free(time);
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"New User Joined (%s)", client->user_name);
+	addToLog(message_to_log);
 	
 	return 0;
 }
@@ -140,9 +140,10 @@ void removeClient(Client* client){
 	//End of critical zone
 	pthread_mutex_unlock (&client_mutex);
 	
-	char *time = getTime();
-	printf("(%s) - Client LogOut (%s)\n", time, client->user_name);
-	free(time);
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"Client LogOut (%s)", client->user_name);
+	addToLog(message_to_log);
+	
 	destroyClient(client);
 	return;
 }
