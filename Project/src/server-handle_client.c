@@ -13,6 +13,8 @@
 
 #include "server-handle_client.h"
 
+//https://computing.llnl.gov/tutorials/pthreads/#ConditionVariables
+
 void * client_thread(void *arg){
 	Client* user = (Client*) arg;
 	int should_exit = 0;
@@ -35,6 +37,13 @@ void * client_thread(void *arg){
 	pthread_exit(NULL);
 }
 
+void * broadcast_thread(void *arg){
+	
+	
+	
+	pthread_exit(NULL);
+}
+
 void * server_thread(void *arg){
 	//Variables
 	//General
@@ -49,6 +58,9 @@ void * server_thread(void *arg){
 	
 	//User List
 	iniClientDB();
+	
+	pthread_t broadcast_thread_id;
+	pthread_create(&broadcast_thread_id, NULL, broadcast_thread, NULL);
 	
 	while (!should_exit){
 		new_sock = accept(sock_fd, NULL, NULL);

@@ -64,7 +64,7 @@ int main(){
 			should_exit = handleKeyboard(); 
 			
 		}else if (FD_ISSET(sock_fd, &readfds)) {
-			
+			printf("Receiving Broadcast from server...\n");
 		}
 	}
 	exit(0);

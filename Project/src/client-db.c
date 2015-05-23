@@ -8,6 +8,7 @@
 #include "log.h"
 
 ClientDB *client_db;
+pthread_mutex_t client_mutex;
 
 /* iniClientDB
  * 
@@ -19,6 +20,8 @@ void iniClientDB(){
 	client_db = (ClientDB*) malloc(sizeof(ClientDB));
 	client_db->first = NULL;
 	client_db->counter = 0;
+	
+	pthread_mutex_init(&client_mutex, NULL);
 	
 }
 
@@ -38,6 +41,8 @@ void destroyClientDB(){
 		}
 		destroyClient(aux);
 	}
+	pthread_mutex_destroy(&client_mutex);
+	
 	free(client_db);
 	return;
 }
@@ -73,27 +78,36 @@ void destroyClient(Client* client){
  * 
  * */
 int addClient(Client* client){
+	pthread_mutex_lock (&client_mutex);
+	//Critical zone
 	Client* aux = client_db->first;
 	
 	if (aux == NULL){
 		client_db->first = client;
 		client_db->counter ++;
-		char *time = getTime();
-		printf("(%s) - First User Joined (%s)\n", time, client->user_name);
-		free(time);
 	}else{	
 		while(aux->next != NULL){
-			if (strcmp(aux->user_name, client->user_name) == 0) return -1;
+			if (strcmp(aux->user_name, client->user_name) == 0){
+				pthread_mutex_unlock (&client_mutex);
+				return -1;
+			}
 			aux = aux->next;
 		}
-		if (strcmp(aux->user_name, client->user_name) == 0) return -1;
+		if (strcmp(aux->user_name, client->user_name) == 0) {
+				pthread_mutex_unlock (&client_mutex);
+				return -1;
+			}
 		aux->next = client;
 		client_db->counter ++;
-		char *time = getTime();
-		printf("(%s) - New User Joined (%s)\n", time, client->user_name);
-		free(time);
 	}
-	fflush( stdout );
+	
+	//End of critical zone
+	pthread_mutex_unlock (&client_mutex);
+	
+	char *time = getTime();
+	printf("(%s) - New User Joined (%s)\n", time, client->user_name);
+	free(time);
+	
 	return 0;
 }
 
@@ -102,8 +116,10 @@ int addClient(Client* client){
  * 
  * */
 void removeClient(Client* client){
-	Client* aux = client_db->first, *aux2;
+	pthread_mutex_lock (&client_mutex);
 	
+	//Critical zone
+	Client* aux = client_db->first, *aux2;
 	if (aux != NULL && aux->next == NULL){
 		client_db->first = NULL; //Only one client
 		client_db->counter = 0;
@@ -121,6 +137,9 @@ void removeClient(Client* client){
 			aux = aux->next;
 		}
 	}
+	//End of critical zone
+	pthread_mutex_unlock (&client_mutex);
+	
 	char *time = getTime();
 	printf("(%s) - Client LogOut (%s)\n", time, client->user_name);
 	free(time);
