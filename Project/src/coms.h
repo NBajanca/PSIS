@@ -5,7 +5,7 @@
 #define STD_SIZE 100
 
 #define ALLOC_MSG 1
-#define DONT_ALLOC_MSG 1
+#define DONT_ALLOC_MSG 0
 
 typedef struct proto_msg {
 	char *msg;

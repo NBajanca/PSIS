@@ -12,7 +12,6 @@
 #include "client-server.pb-c.h"
 #include "coms.h"
 #include "client-server.h"
-#include "client.h"
 
 #define LOGIN_STR "LOGIN"// username 
 #define DISC_STR "DISC" //Disconnects from server
@@ -22,9 +21,26 @@
 
 //Socket
 int sock_fd;
+int iniSocket();
 
 //Server
 int login_status;
+
+//User Interface
+int handleKeyboard();
+
+//Chat
+int chatProtocol(char *buffer);
+
+//Query
+int queryProtocol(int first_message, int last_message);
+proto_msg *querySendProto(int first_message, int last_message);
+void queryReceiveProto(proto_msg *query_response_message);
+
+//Login
+int loginProtocol(char *buffer);
+proto_msg *loginSendProto(char *buffer);
+void loginReceiveProto(proto_msg *login_response_message);
 
 int main(){
 	//Variables
@@ -54,6 +70,12 @@ int main(){
 	exit(0);
 }
 
+/* handleKeyboard
+ * 
+ * Handles the client interface. Skeleton provided by professor
+ * 
+ * @ returns int - (1) for exit or (0) for repeat.
+ * */
 int handleKeyboard(){
 	int should_exit = 0;
 	char line[STD_SIZE];
@@ -82,6 +104,7 @@ int handleKeyboard(){
 		}else if (login_status){
 			if(strcmp(command, DISC_STR)==0){
 				printf("Sending DISconnnect command\n");
+				discProtocol();
 				close(sock_fd);
 				login_status= 0;						
 					
@@ -122,6 +145,208 @@ int handleKeyboard(){
 	return should_exit;
 }
 
+//DISC
+/* discProtocol
+ * Advises server of disconnection.
+ * 
+ * @ returns int - (-1) on error or (0) on success.
+ * */
+int discProtocol(){
+	//Prepare message
+	MESSAGE control;
+	message__init(&control);
+	control.next_message = 2;
+	
+	//Marshal message
+	proto_msg* chat_message = protoCreateMessage(&control);
+	
+	//Send message
+	if (sendMessage(chat_message, sock_fd) == -1) return -1;
+	
+	return 0;
+}
+
+//CHAT
+/*chatProtocol
+ * Receives a chat message from client and sends it to the server.
+ * 
+ * Description:
+ * First advises the server that the incoming message is a chat and then sends the chat.
+ * 
+ * @ buffer - string containing the message to send.
+ * @ returns int - (-1) on error or (0) on success.
+ * */
+int chatProtocol(char *buffer){
+	//Prepare message
+	MESSAGE control;
+	message__init(&control);
+	control.next_message = 0;
+	
+	CHAT chat;
+	chat__init(&chat);
+	chat.message = strdup(buffer);
+	
+	//CHAT chat_message = chatSendProto(buffer);
+	control.chat = &chat;
+	
+	//Marshal message
+	proto_msg* chat_message = protoCreateMessage(&control);
+	
+	free(chat.message);
+	
+	//Send message
+	if (sendMessage(chat_message, sock_fd) == -1) return -1;
+	
+	return 0;
+}
+
+//QUERY
+/* queryProtocol
+ * 
+ * Sends a message with desired first and last message and receives the server response.
+ * 
+ * @ first_message - id number
+ * @ last_message - id number
+ * 
+ * @ returns int - 0 for success, -1 for error. 
+ * */
+int queryProtocol(int first_message, int last_message){
+	
+	proto_msg * query_message = querySendProto(first_message, last_message);
+	
+	if (sendMessage(query_message, sock_fd) == -1) return -1;
+	
+	proto_msg * query_response_message = receiveMessage(sock_fd);
+	if (query_response_message == NULL) return -1;
+	
+	queryReceiveProto(query_response_message);
+					
+	return 0;
+}
+
+/* querySendProto
+ * 
+ * Prepares the message regarding QUERY
+ * Does the marshal
+ * 
+ * @ first_message - id number
+ * @ last_message - id number
+ * 
+ * @ returns proto_message - Marshaled message for the server
+ * */
+proto_msg *querySendProto(int first_message, int last_message){
+	//Prepare message
+	MESSAGE control;
+	message__init(&control);
+	control.next_message = 1;
+	
+	QUERY query;
+	query__init(&query);
+	query.id_min = first_message;
+	query.id_max = last_message;
+	
+	control.query = &query;
+	
+	//Marshal message
+	proto_msg* message = protoCreateMessage(&control);
+	
+	return message;
+}
+
+/* queryReceiveProto
+ * 
+ * Deals with Query Message Response from server.
+ * Does the unmarshal and processes the response.
+ * 
+ * @ query_response_message - Structure with the login response from the server.
+ * */
+void queryReceiveProto(proto_msg *query_response_message){
+	
+	destroyProtoMSG(query_response_message);
+	return;
+}
+
+//LOGIN
+/* loginProtocol
+ * 
+ * Sends a message with desired username and receives the server response.
+ * 
+ * @ buffer - Buffer with the user name
+ * @ returns int - 0 for success, -1 for error. 
+ * */
+int loginProtocol(char *buffer){
+	//Proto
+	proto_msg * login_message = loginSendProto(buffer);
+	
+	//Send Message
+	if (sendMessage(login_message, sock_fd) == -1) return -1;
+
+	//Read Message
+	proto_msg * login_response_message = receiveMessage(sock_fd);
+	if (login_response_message == NULL) return -1;
+	
+	//Proto
+	loginReceiveProto(login_response_message);
+					
+	return 0;
+}
+
+
+/* loginSendProto
+ * 
+ * Prepares the message regarding LOGIN
+ * Does the marshal
+ * 
+ * @ buffer - Buffer with the user name
+ * @ returns proto_message - Marshaled message for the server
+ * */
+proto_msg *loginSendProto(char *buffer){
+	//Prepare message
+	LOGIN login;
+	login__init(&login);
+	login.username = strdup(buffer);
+	
+	//Marshal message
+	proto_msg * proto_message = protoCreateLogin(&login);
+	
+	free(login.username);
+	
+	return proto_message;
+}
+
+/* loginReceiveProto
+ * 
+ * Deals with Login Message Response from server.
+ * Does the unmarshal and processes the response. Changes the login_status global variable.
+ * 
+ * @ login_response_message - Structure with the login response from the server.
+ * */
+void loginReceiveProto(proto_msg *login_response_message){	
+	LOGIN *login_response = login__unpack(NULL, login_response_message->msg_size, login_response_message->msg);
+	
+	switch ( login_response->validation ) {
+		case 0:
+			printf("User Login with success\n");
+			login_status = 1;
+			break;
+		case 1:
+			printf("Username in use\n");
+			login_status = 0;
+			break;
+		default:
+			printf("Username invalid\n");
+			login_status = 0;
+			break;
+	}
+	fflush(stdout);
+	
+	//Free involved memory
+	destroyProtoMSG(login_response_message);
+	login__free_unpacked(login_response, NULL);
+	
+	return;
+}
+
 
 /* iniSocket
  * 
@@ -150,141 +375,4 @@ int iniSocket(){
 	}
 	
 	return sock_fd;
-}
-
-//Message Processing
-int loginProtocol(char *buffer){
-	//Proto
-	proto_msg * login_message = loginSendProto(buffer);
-	
-	//Send Message
-	send(sock_fd, login_message->msg, login_message->msg_size, 0);
-	perror("send");
-	destroyProtoMSG(login_message);
-
-	//Read Message
-	proto_msg * login_response_message = createProtoMSG(ALLOC_MSG);
-	login_response_message->msg_size = read(sock_fd, login_response_message->msg, BUFFER_SIZE);
-	
-	//Proto
-	loginReceiveProto(login_response_message);
-	destroyProtoMSG(login_response_message);
-					
-	return 0;
-}
-
-/*chatProtocol
- * Receives a chat message from client and sends it to the server.
- * 
- * Description:
- * First advises the server that the incoming message is a chat and then sends the chat.
- * 
- * @ buffer - string containing the message to send.
- * @ returns int - (-1) on error or (0) on success.
- * */
-int chatProtocol(char *buffer){
-	//Prepare message
-	MESSAGE control;
-	message__init(&control);
-	control.next_message = 0;
-	
-	CHAT chat;
-	chat__init(&chat);
-	chat.message = strdup(buffer);
-	
-	//CHAT chat_message = chatSendProto(buffer);
-	control.chat = &chat;
-	
-	//Marshal message
-	size_t msg_size = message__get_packed_size(&control);
-	char *msg= malloc(msg_size);
-	message__pack(&control, msg);
-	
-	//Send message
-	if (send(sock_fd, msg, msg_size, 0) == -1){
-		perror("Send (control)");
-		return -1;
-	}
-	
-	return 0;
-}
-
-
-int queryProtocol(int first_message, int last_message){
-	//Prepare message
-	MESSAGE control;
-	message__init(&control);
-	control.next_message = 1;
-	
-	QUERY query;
-	query__init(&query);
-	query.id_min = first_message;
-	query.id_max = last_message;
-	
-	control.query = &query;
-	
-	//Marshal message
-	size_t msg_size = message__get_packed_size(&control);
-	char *msg= malloc(msg_size);
-	message__pack(&control, msg);
-	
-	//Send message
-	if (send(sock_fd, msg, msg_size, 0) == -1){
-		perror("Send (control)");
-		return -1;
-	}
-					
-	return 0;
-}
-
-
-//LOGIN
-/* loginSendProtocol
- * 
- * Prepares the message regarding LOGIN
- * Does the marshal
- * 
- * @ buffer - Buffer with the user name
- * @ returns proto_message - Marshaled message for the server
- * */
-proto_msg *loginSendProto(char *buffer){
-	//Prepare message
-	LOGIN login;
-	login__init(&login);
-	login.username = strdup(buffer);
-	
-	//Marshal message
-	proto_msg * proto_message = protoCreateLogin(&login);
-	
-	return proto_message;
-}
-
-/* loginReceiveProtocol
- * 
- * Deals with Login Message Response from server
- * Does the unmarshal
- * 
- * @ login_response_message - Structure with the login response from the server
- * @ returns int - Login information
- * */
-void loginReceiveProto(proto_msg *login_response_message){	
-	LOGIN *login_response;
-	
-	login_response = login__unpack(NULL, login_response_message->msg_size, login_response_message->msg);
-	
-	switch ( login_response->validation ) {
-		case 0:
-			printf("User Login with success\n");
-			login_status = 1;
-			break;
-		case 1:
-			printf("Username in use\n");
-			login_status = 0;
-			break;
-		default:
-			printf("Username invalid\n");
-			login_status = 0;
-			break;
-	}
-	return;
 }

@@ -24,7 +24,7 @@ $(EXE_DIR)/client: $(OBJ_DIR)/client.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/coms.o $
 	$(CC) $(OBJ_DIR)/client.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/coms.o $(OBJ_DIR)/client-server.o -o $(EXE_DIR)/client  $(PROTO_FLAGS)
 
 #Client Object
-$(OBJ_DIR)/client.o: $(SRC_DIR)/client.c $(SRC_DIR)/client.h $(SRC_DIR)/$(PROTO).h $(SRC_DIR)/coms.h $(SRC_DIR)/client-server.h
+$(OBJ_DIR)/client.o: $(SRC_DIR)/client.c $(SRC_DIR)/$(PROTO).h $(SRC_DIR)/coms.h $(SRC_DIR)/client-server.h
 	$(CC) -c $(SRC_DIR)/client.c -o $(OBJ_DIR)/client.o $(PROTO_FLAGS)
 
 #Server Executable
