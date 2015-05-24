@@ -221,6 +221,49 @@ void   admin__free_unpacked
   PROTOBUF_C_ASSERT (message->base.descriptor == &admin__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   alive__init
+                     (ALIVE         *message)
+{
+  static ALIVE init_value = ALIVE__INIT;
+  *message = init_value;
+}
+size_t alive__get_packed_size
+                     (const ALIVE *message)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &alive__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t alive__pack
+                     (const ALIVE *message,
+                      uint8_t       *out)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &alive__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t alive__pack_to_buffer
+                     (const ALIVE *message,
+                      ProtobufCBuffer *buffer)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &alive__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+ALIVE *
+       alive__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (ALIVE *)
+     protobuf_c_message_unpack (&alive__descriptor,
+                                allocator, len, data);
+}
+void   alive__free_unpacked
+                     (ALIVE *message,
+                      ProtobufCAllocator *allocator)
+{
+  PROTOBUF_C_ASSERT (message->base.descriptor == &alive__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 const ProtobufCEnumValue login__validation__enum_values_by_number[3] =
 {
   { "OK", "LOGIN__VALIDATION__OK", 0 },
@@ -590,5 +633,71 @@ const ProtobufCMessageDescriptor admin__descriptor =
   admin__field_indices_by_name,
   1,  admin__number_ranges,
   (ProtobufCMessageInit) admin__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+const ProtobufCEnumValue alive__state__enum_values_by_number[2] =
+{
+  { "ALIVE", "ALIVE__STATE__ALIVE", 0 },
+  { "QUIT", "ALIVE__STATE__QUIT", 1 },
+};
+static const ProtobufCIntRange alive__state__value_ranges[] = {
+{0, 0},{0, 2}
+};
+const ProtobufCEnumValueIndex alive__state__enum_values_by_name[2] =
+{
+  { "ALIVE", 0 },
+  { "QUIT", 1 },
+};
+const ProtobufCEnumDescriptor alive__state__descriptor =
+{
+  PROTOBUF_C_ENUM_DESCRIPTOR_MAGIC,
+  "ALIVE.STATE",
+  "STATE",
+  "ALIVE__STATE",
+  "",
+  2,
+  alive__state__enum_values_by_number,
+  2,
+  alive__state__enum_values_by_name,
+  1,
+  alive__state__value_ranges,
+  NULL,NULL,NULL,NULL   /* reserved[1234] */
+};
+static const ProtobufCFieldDescriptor alive__field_descriptors[1] =
+{
+  {
+    "state",
+    40,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_ENUM,
+    0,   /* quantifier_offset */
+    PROTOBUF_C_OFFSETOF(ALIVE, state),
+    &alive__state__descriptor,
+    NULL,
+    0,            /* packed */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned alive__field_indices_by_name[] = {
+  0,   /* field[0] = state */
+};
+static const ProtobufCIntRange alive__number_ranges[1 + 1] =
+{
+  { 40, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor alive__descriptor =
+{
+  PROTOBUF_C_MESSAGE_DESCRIPTOR_MAGIC,
+  "ALIVE",
+  "ALIVE",
+  "ALIVE",
+  "",
+  sizeof(ALIVE),
+  1,
+  alive__field_descriptors,
+  alive__field_indices_by_name,
+  1,  alive__number_ranges,
+  (ProtobufCMessageInit) alive__init,
   NULL,NULL,NULL    /* reserved[123] */
 };

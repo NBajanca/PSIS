@@ -8,6 +8,7 @@ int handleAdminRequests(int sock_fd);
 int sendLog(int sock_fd);
 
 int iniSocket();
+int getExit();
 
 #endif
 

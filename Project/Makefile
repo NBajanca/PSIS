@@ -9,7 +9,7 @@ THREAD_FLAGS = -lpthread
 
 PROTO = client-server.pb-c
 
-all: $(EXE_DIR)/server $(EXE_DIR)/admin $(EXE_DIR)/client
+all: $(EXE_DIR)/server $(EXE_DIR)/admin $(EXE_DIR)/client $(EXE_DIR)/relauncher
 
 #Admin Executable
 $(EXE_DIR)/admin: $(OBJ_DIR)/admin.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-admin.o
@@ -27,9 +27,17 @@ $(EXE_DIR)/client: $(OBJ_DIR)/client.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/coms.o $
 $(OBJ_DIR)/client.o: $(SRC_DIR)/client.c $(SRC_DIR)/$(PROTO).h $(SRC_DIR)/coms.h $(SRC_DIR)/client-server.h
 	$(CC) -c $(SRC_DIR)/client.c -o $(OBJ_DIR)/client.o $(PROTO_FLAGS)
 
+#Relauncher Executable
+$(EXE_DIR)/relauncher: $(OBJ_DIR)/relauncher.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-relauncher.o
+	$(CC) $(OBJ_DIR)/relauncher.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-relauncher.o -o $(EXE_DIR)/relauncher  $(PROTO_FLAGS) $(THREAD_FLAGS)
+
+#Relauncher Object
+$(OBJ_DIR)/relauncher.o: $(SRC_DIR)/relauncher.c $(SRC_DIR)/$(PROTO).h $(SRC_DIR)/coms.h $(SRC_DIR)/server-relauncher.h
+	$(CC) -c $(SRC_DIR)/relauncher.c -o $(OBJ_DIR)/relauncher.o $(PROTO_FLAGS) $(THREAD_FLAGS)
+
 #Server Executable
-$(EXE_DIR)/server: $(OBJ_DIR)/server.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/server-handle_client.o $(OBJ_DIR)/server-handle_admin.o $(OBJ_DIR)/server-handle_relauncher.o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-admin.o $(OBJ_DIR)/log.o $(OBJ_DIR)/client-db.o $(OBJ_DIR)/client-server.o $(OBJ_DIR)/message-db.o
-	$(CC) $(OBJ_DIR)/server.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/server-handle_client.o $(OBJ_DIR)/server-handle_admin.o $(OBJ_DIR)/server-handle_relauncher.o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-admin.o $(OBJ_DIR)/log.o $(OBJ_DIR)/client-db.o $(OBJ_DIR)/client-server.o $(OBJ_DIR)/message-db.o -o $(EXE_DIR)/server $(PROTO_FLAGS) $(THREAD_FLAGS)
+$(EXE_DIR)/server: $(OBJ_DIR)/server.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/server-handle_client.o $(OBJ_DIR)/server-handle_admin.o $(OBJ_DIR)/server-handle_relauncher.o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-admin.o $(OBJ_DIR)/log.o $(OBJ_DIR)/client-db.o $(OBJ_DIR)/client-server.o $(OBJ_DIR)/message-db.o $(OBJ_DIR)/server-relauncher.o
+	$(CC) $(OBJ_DIR)/server.o $(OBJ_DIR)/$(PROTO).o $(OBJ_DIR)/server-handle_client.o $(OBJ_DIR)/server-handle_admin.o $(OBJ_DIR)/server-handle_relauncher.o $(OBJ_DIR)/coms.o $(OBJ_DIR)/server-admin.o $(OBJ_DIR)/log.o $(OBJ_DIR)/client-db.o $(OBJ_DIR)/client-server.o $(OBJ_DIR)/message-db.o $(OBJ_DIR)/server-relauncher.o -o $(EXE_DIR)/server $(PROTO_FLAGS) $(THREAD_FLAGS)
 
 #Server Object
 $(OBJ_DIR)/server.o: $(SRC_DIR)/server.c $(SRC_DIR)/server-handle_client.h $(SRC_DIR)/server-handle_admin.h $(SRC_DIR)/server-handle_relauncher.h $(SRC_DIR)/log.h
@@ -48,12 +56,16 @@ $(OBJ_DIR)/server-admin.o: $(SRC_DIR)/server-admin.c $(SRC_DIR)/server-admin.h $
 	$(CC) -c $(SRC_DIR)/server-admin.c -o $(OBJ_DIR)/server-admin.o $(PROTO_FLAGS)
 
 #Server-handle_relauncher Object
-$(OBJ_DIR)/server-handle_relauncher.o: $(SRC_DIR)/server-handle_relauncher.c $(SRC_DIR)/server-handle_relauncher.h $(SRC_DIR)/$(PROTO).h $(SRC_DIR)/log.h
+$(OBJ_DIR)/server-handle_relauncher.o: $(SRC_DIR)/server-handle_relauncher.c $(SRC_DIR)/server-handle_relauncher.h $(SRC_DIR)/$(PROTO).h $(SRC_DIR)/log.h $(SRC_DIR)/server-relauncher.h $(SRC_DIR)/server-admin.h
 	$(CC) -c $(SRC_DIR)/server-handle_relauncher.c -o $(OBJ_DIR)/server-handle_relauncher.o $(PROTO_FLAGS)
 
 #Client-Server Object
 $(OBJ_DIR)/client-server.o: $(SRC_DIR)/client-server.c $(SRC_DIR)/client-server.h $(SRC_DIR)/coms.h $(SRC_DIR)/$(PROTO).h
 	$(CC) -c $(SRC_DIR)/client-server.c -o $(OBJ_DIR)/client-server.o $(PROTO_FLAGS)
+	
+#Server-Relauncher Object
+$(OBJ_DIR)/server-relauncher.o: $(SRC_DIR)/server-relauncher.c $(SRC_DIR)/server-relauncher.h $(SRC_DIR)/coms.h $(SRC_DIR)/$(PROTO).h
+	$(CC) -c $(SRC_DIR)/server-relauncher.c -o $(OBJ_DIR)/server-relauncher.o $(PROTO_FLAGS)
 
 #Client-DB Object
 $(OBJ_DIR)/client-db.o: $(SRC_DIR)/client-db.c $(SRC_DIR)/client-db.h $(SRC_DIR)/log.h
@@ -76,4 +88,4 @@ $(OBJ_DIR)/$(PROTO).o: $(SRC_DIR)/$(PROTO).c $(SRC_DIR)/$(PROTO).h
 	$(CC) -c $(SRC_DIR)/$(PROTO).c -o $(OBJ_DIR)/$(PROTO).o $(PROTO_FLAGS)
 
 clean:
-	$(RM) $(EXE_DIR)/server $(EXE_DIR)/admin $(EXE_DIR)/client
+	$(RM) $(EXE_DIR)/server $(EXE_DIR)/admin $(EXE_DIR)/client $(EXE_DIR)/relauncher

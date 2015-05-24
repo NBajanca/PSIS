@@ -15,13 +15,14 @@
 #include "server-admin.h"
 #include "log.h"
 
-
+int exit_server;
 
 int handleAdmin(){
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Initializing Admin Handler");
 	addToLog(message_to_log);
 	
+	exit_server = 0;
 	int sock_fd = iniSocket();
 	
 	message_to_log = createProtoMSG( ALLOC_MSG );
@@ -31,6 +32,7 @@ int handleAdmin(){
 	while(1){
 		if (handleNewAdmin (sock_fd) != 0) break;
 	}
+	exit_server = 1;
 	close(sock_fd);
 	return 0;
 }
@@ -150,4 +152,8 @@ int iniSocket(){
 	}
 	
 	return sock_fd;
+}
+
+int getExit(){
+	return exit_server;
 }

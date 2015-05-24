@@ -13,6 +13,7 @@ typedef struct _CHAT CHAT;
 typedef struct _QUERY QUERY;
 typedef struct _MESSAGE MESSAGE;
 typedef struct _ADMIN ADMIN;
+typedef struct _ALIVE ALIVE;
 
 
 /* --- enums --- */
@@ -32,6 +33,10 @@ typedef enum _ADMIN__ACTION {
   ADMIN__ACTION__QUIT = 1,
   ADMIN__ACTION__DISC = 2
 } ADMIN__ACTION;
+typedef enum _ALIVE__STATE {
+  ALIVE__STATE__ALIVE = 0,
+  ALIVE__STATE__QUIT = 1
+} ALIVE__STATE;
 
 /* --- messages --- */
 
@@ -93,6 +98,16 @@ struct  _ADMIN
 #define ADMIN__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&admin__descriptor) \
     , 0, NULL }
+
+
+struct  _ALIVE
+{
+  ProtobufCMessage base;
+  ALIVE__STATE state;
+};
+#define ALIVE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&alive__descriptor) \
+    , 0 }
 
 
 /* LOGIN methods */
@@ -190,6 +205,25 @@ ADMIN *
 void   admin__free_unpacked
                      (ADMIN *message,
                       ProtobufCAllocator *allocator);
+/* ALIVE methods */
+void   alive__init
+                     (ALIVE         *message);
+size_t alive__get_packed_size
+                     (const ALIVE   *message);
+size_t alive__pack
+                     (const ALIVE   *message,
+                      uint8_t             *out);
+size_t alive__pack_to_buffer
+                     (const ALIVE   *message,
+                      ProtobufCBuffer     *buffer);
+ALIVE *
+       alive__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   alive__free_unpacked
+                     (ALIVE *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*LOGIN_Closure)
@@ -207,6 +241,9 @@ typedef void (*MESSAGE_Closure)
 typedef void (*ADMIN_Closure)
                  (const ADMIN *message,
                   void *closure_data);
+typedef void (*ALIVE_Closure)
+                 (const ALIVE *message,
+                  void *closure_data);
 
 /* --- services --- */
 
@@ -221,6 +258,8 @@ extern const ProtobufCMessageDescriptor message__descriptor;
 extern const ProtobufCEnumDescriptor    message__next__message__descriptor;
 extern const ProtobufCMessageDescriptor admin__descriptor;
 extern const ProtobufCEnumDescriptor    admin__action__descriptor;
+extern const ProtobufCMessageDescriptor alive__descriptor;
+extern const ProtobufCEnumDescriptor    alive__state__descriptor;
 
 PROTOBUF_C_END_DECLS
 
