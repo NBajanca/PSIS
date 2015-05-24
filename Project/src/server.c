@@ -15,7 +15,7 @@ int main ( int arc, char **argv ) {
 	handleRelauncher();	//Creates Thread(s)
 	handleClient(); //Creates Thread(s)
 	handleAdmin(); //Blocks until order to quit
-	
+
 	destroyLog();
 	exit(0);
 }

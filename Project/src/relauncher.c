@@ -69,13 +69,12 @@ void * keep_son_alive_thread(void *arg){
 	
 	createServer();
 	while ( !should_exit ){
-		sleep(120);
 		pid_proc = wait(&status);
-		if(WIFEXITED(status)){
+		if(WIFEXITED(status) &&  !WIFSIGNALED(status)){
 			if (WEXITSTATUS(status) == 0){
 				should_exit = 1;
 				exit_server = 1;
-				printf("Server turned off by admin. Closing Relauncher...\n");
+				printf("Server turned off by admin. Closing Relauncher...\n"); fflush(stdout);
 			}
 		}
 		
