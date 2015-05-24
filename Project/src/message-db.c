@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "log.h"
 #include "message-db.h"
 
 MessageDB *message_db;
@@ -94,6 +95,10 @@ int addMessage(Message* message){
 		message->id = message_db->counter;
 	}
 	
+	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+	message_to_log->msg_size = sprintf(message_to_log->msg ,"[%d] %s", message->id, message->msg);
+	addToLog(message_to_log);
+	
 	//End of critical zone
 	return 0;
 }
@@ -107,4 +112,26 @@ Message *getLastMessage (){
 		return message_db->last;
 	}
 	
+}
+
+Message **getMessages (int first, int last, int *number_of_messages){
+	if( (first<= 0) || (last<first)) return NULL;
+	
+	if (last> message_db->counter) last = message_db->counter;
+	*number_of_messages = last-first + 1;
+	
+	Message **message_list = (Message**) malloc ( *number_of_messages * sizeof(Message*));
+	Message *aux = message_db->first;
+	
+	while (aux->id != first){
+		aux = aux->next;
+	}
+	
+	int i;
+	for (i = 0; i < *number_of_messages ; i++){
+		message_list[i] = aux;
+		aux = aux->next;
+	}
+	
+	return message_list;
 }

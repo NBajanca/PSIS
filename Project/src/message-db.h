@@ -20,6 +20,8 @@ Message* createMessage();
 void destroyMessage(Message* message);
 
 int addMessage(Message* message);
+
 Message *getLastMessage ();
+Message **getMessages (int first, int last, int *number_of_messages);
 
 #endif

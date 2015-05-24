@@ -15,7 +15,6 @@
 
 #define LOGIN_STR "LOGIN"// username 
 #define DISC_STR "DISC" //Disconnects from server
-#define QUIT_STR "QUIT" //Exits the application
 #define CHAT_STR "CHAT"// string
 #define QUERY_STR "QUERY"// id_min id_max – request o
 
@@ -36,7 +35,7 @@ int chatProtocol(char *buffer);
 //Query
 int queryProtocol(int first_message, int last_message);
 proto_msg *querySendProto(int first_message, int last_message);
-void queryReceiveProto(proto_msg *query_response_message);
+void queryReceiveProtocol(QUERY *query_message);
 
 //Login
 int loginProtocol(char *buffer);
@@ -84,7 +83,20 @@ int serverMessages(){
 	
 	broadcast_message = receiveMessage(sock_fd);
 	broadcat_message_aux = message__unpack(NULL, broadcast_message->msg_size, broadcast_message->msg);
-	printf("%s\n", broadcat_message_aux->chat->message);
+	
+	switch (broadcat_message_aux->next_message){
+		case 0:
+			printf("\t%s\n", broadcat_message_aux->chat->message);
+			break;
+		case 1:
+			printf("\tReceiving Query Response\n");
+			queryReceiveProtocol(broadcat_message_aux->query);
+			break;
+		case 2:
+			printf("\tServer is Shuting Down\n");
+			break;
+	}
+	
 	message__free_unpacked(broadcat_message_aux, NULL);
 	destroyProtoMSG(broadcast_message);
 	
@@ -119,7 +131,7 @@ int handleKeyboard(){
 				printf("Invalid LOGIN command\n");
 			}
 			
-		}else if(strcmp(command, QUIT_STR)==0){
+		}else if(strcmp(command, DISC_STR)==0 && !(login_status)){
 			printf("Exiting the app\n");
 			close(sock_fd);
 			should_exit= 1;						
@@ -127,10 +139,10 @@ int handleKeyboard(){
 			if(strcmp(command, DISC_STR)==0){
 				printf("Sending DISconnnect command\n");
 				discProtocol();
+				printf("Exiting the app\n");
 				close(sock_fd);
-				login_status= 0;						
-					
-					
+				should_exit= 1;						
+
 			}else if(strcmp(command, CHAT_STR)==0){
 				if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
 					printf("Sending CHAT command (%s)\n", cmd_str_arg);
@@ -239,11 +251,6 @@ int queryProtocol(int first_message, int last_message){
 	proto_msg * query_message = querySendProto(first_message, last_message);
 	
 	if (sendMessage(query_message, sock_fd) == -1) return -1;
-	
-	proto_msg * query_response_message = receiveMessage(sock_fd);
-	if (query_response_message == NULL) return -1;
-	
-	queryReceiveProto(query_response_message);
 					
 	return 0;
 }
@@ -284,9 +291,15 @@ proto_msg *querySendProto(int first_message, int last_message){
  * 
  * @ query_response_message - Structure with the login response from the server.
  * */
-void queryReceiveProto(proto_msg *query_response_message){
+void queryReceiveProtocol(QUERY *query_message){
+	int num_messages, i;
 	
-	destroyProtoMSG(query_response_message);
+	num_messages = query_message->id_max - query_message->id_min +1;
+	
+	for (i = 0; i < num_messages; i++){
+		printf("\t[%d] %s\n", query_message->messages[i]->id ,query_message->messages[i]->message);
+	}
+	
 	return;
 }
 

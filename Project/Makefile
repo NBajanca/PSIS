@@ -60,7 +60,7 @@ $(OBJ_DIR)/client-db.o: $(SRC_DIR)/client-db.c $(SRC_DIR)/client-db.h $(SRC_DIR)
 	$(CC) -c $(SRC_DIR)/client-db.c -o $(OBJ_DIR)/client-db.o
 	
 #Message-DB Object
-$(OBJ_DIR)/message-db.o: $(SRC_DIR)/message-db.c $(SRC_DIR)/message-db.h
+$(OBJ_DIR)/message-db.o: $(SRC_DIR)/message-db.c $(SRC_DIR)/message-db.h $(SRC_DIR)/log.h
 	$(CC) -c $(SRC_DIR)/message-db.c -o $(OBJ_DIR)/message-db.o
 
 #Log Object

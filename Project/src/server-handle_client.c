@@ -58,7 +58,7 @@ void * broadcast_thread(void *arg){
 		pthread_mutex_lock (&message_mutex);
 		pthread_cond_wait(&message_mutex_cv, &message_mutex);
 		message_to_broadcast = getLastMessage();
-		sprintf( aux, "%d - %s", message_to_broadcast->id, message_to_broadcast->msg);
+		sprintf( aux, "[%d] %s", message_to_broadcast->id, message_to_broadcast->msg);
 		chat_message.message = strdup(aux);
 		pthread_mutex_unlock (&message_mutex);
 		
@@ -177,20 +177,16 @@ int controlProtocol(Client* user){
 }
 
 int chatProtocol(Client* user, CHAT *chat){
-	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-	message_to_log->msg_size = sprintf(message_to_log->msg ,"%s : %s",user->user_name, chat->message);
-	
+	char aux[STD_SIZE];
 	Message *chat_message = createMessage();
-	chat_message->msg = strdup(message_to_log->msg);
 	
-	addToLog(message_to_log);
+	sprintf(aux ,"%s : %s",user->user_name, chat->message);
+	chat_message->msg = strdup(aux);
 	
 	pthread_mutex_lock (&message_mutex);
 	addMessage(chat_message);
 	pthread_cond_signal(&message_mutex_cv);
-	pthread_mutex_unlock (&message_mutex);	
-	
-	//IMPLEMENTAR BROADCAST
+	pthread_mutex_unlock (&message_mutex);
 	
 	return 0;
 }
@@ -198,9 +194,45 @@ int chatProtocol(Client* user, CHAT *chat){
 int queryProtocol(Client* user, QUERY *query){
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"%s  QUERY : %d -> %d",user->user_name, query->id_min, query->id_max);
+	
+	int number_of_messages, first = query->id_min, last = query->id_max;
+	Message ** list_of_messages;
+	
 	addToLog(message_to_log);
 	
-	//IMPLEMENTAR LOG E RESPOSTA
+	pthread_mutex_lock (&message_mutex);
+	list_of_messages = getMessages (first, last, &number_of_messages);
+	pthread_mutex_unlock (&message_mutex);
+	
+	if (list_of_messages == NULL) return -1;
+	
+	CHAT **chat_messages;
+    chat_messages = malloc (sizeof (CHAT*) * (number_of_messages));
+    int i;
+    
+    for (i = 0; i < number_of_messages; i++)
+	{
+		chat_messages[i] = malloc (sizeof (CHAT));
+		chat__init (chat_messages[i]);
+		chat_messages[i]->message = strdup(list_of_messages[i]->msg);
+		chat_messages[i]->has_id = 1;
+		chat_messages[i]->id = list_of_messages[i]->id;
+	}
+	
+	QUERY query_message;
+	query__init(&query_message);
+	query_message.id_min = first;
+	query_message.id_max = first + number_of_messages - 1;
+	query_message.n_messages = number_of_messages;
+	query_message.messages = chat_messages;
+	
+	MESSAGE message;
+	message__init(&message);
+	message.next_message = 1;
+	message.query = &query_message;
+	
+	proto_msg* query_message_response =  protoCreateMessage(&message);
+	if (sendMessage(query_message_response, user->sock) == -1) return -1;
 	
 	return 0;
 }
