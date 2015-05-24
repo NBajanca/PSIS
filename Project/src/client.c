@@ -25,6 +25,7 @@ int iniSocket();
 
 //Server
 int login_status;
+int serverMessages();
 
 //User Interface
 int handleKeyboard();
@@ -54,21 +55,42 @@ int main(){
 	
 	//Select
 	fd_set readfds;
-	FD_ZERO(&readfds);
-	FD_SET(STDIN_FILENO, &readfds);
-	FD_SET(sock_fd, &readfds);
+	
 	
 	while(! should_exit){
-		select(sock_fd + 1, &readfds, NULL, NULL, NULL);
-		if (FD_ISSET(STDIN_FILENO, &readfds)) {
+		FD_ZERO(&readfds);
+		FD_SET(0, &readfds);
+		FD_SET(sock_fd, &readfds);
+	
+		if (select(sock_fd + 1, &readfds, NULL, NULL, NULL) == -1){
+			perror("Select ");
+			exit(-1);
+		}
+		
+		if (FD_ISSET(sock_fd, &readfds)) {
+			should_exit = serverMessages();
+		}
+		
+		if (FD_ISSET(0, &readfds)) {
 			should_exit = handleKeyboard(); 
-			
-		}else if (FD_ISSET(sock_fd, &readfds)) {
-			printf("Receiving Broadcast from server...\n");
 		}
 	}
 	exit(0);
 }
+
+int serverMessages(){
+	proto_msg *broadcast_message;
+	MESSAGE * broadcat_message_aux;
+	
+	broadcast_message = receiveMessage(sock_fd);
+	broadcat_message_aux = message__unpack(NULL, broadcast_message->msg_size, broadcast_message->msg);
+	printf("%s\n", broadcat_message_aux->chat->message);
+	message__free_unpacked(broadcat_message_aux, NULL);
+	destroyProtoMSG(broadcast_message);
+	
+	return 0;
+}
+	
 
 /* handleKeyboard
  * 
@@ -196,6 +218,8 @@ int chatProtocol(char *buffer){
 	
 	//Send message
 	if (sendMessage(chat_message, sock_fd) == -1) return -1;
+	
+	
 	
 	return 0;
 }

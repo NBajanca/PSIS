@@ -15,6 +15,9 @@
 
 //https://computing.llnl.gov/tutorials/pthreads/#ConditionVariables
 
+pthread_mutex_t message_mutex;
+pthread_cond_t message_mutex_cv;
+
 void * client_thread(void *arg){
 	Client* user = (Client*) arg;
 	int should_exit = 0;
@@ -38,8 +41,36 @@ void * client_thread(void *arg){
 }
 
 void * broadcast_thread(void *arg){
+	Message * message_to_broadcast;
+	int *sock_list, number_of_users, i;
+	proto_msg* broadcast;
+	char aux[STD_SIZE];
 	
-	
+	while(1){
+		
+		MESSAGE chat_broadcast;
+		message__init(&chat_broadcast);
+		chat_broadcast.next_message = 0;
+		
+		CHAT chat_message;
+		chat__init(&chat_message);
+		
+		pthread_mutex_lock (&message_mutex);
+		pthread_cond_wait(&message_mutex_cv, &message_mutex);
+		message_to_broadcast = getLastMessage();
+		sprintf( aux, "%d - %s", message_to_broadcast->id, message_to_broadcast->msg);
+		chat_message.message = strdup(aux);
+		pthread_mutex_unlock (&message_mutex);
+		
+		chat_broadcast.chat = &chat_message;
+		broadcast = protoCreateMessage(&chat_broadcast);
+		
+		sock_list = getSockList(&number_of_users);
+		for (i = 0; i < number_of_users; i++){
+			send(sock_list[i], broadcast->msg, broadcast->msg_size, 0);
+		}
+		destroyProtoMSG(broadcast);	
+	}
 	
 	pthread_exit(NULL);
 }
@@ -56,8 +87,12 @@ void * server_thread(void *arg){
 	//Socket
 	sock_fd = iniClientSocket();
 	
-	//User List
+	//User and Message Lists
 	iniClientDB();
+	iniMessageDB();
+	
+	pthread_mutex_init(&message_mutex, NULL);
+	pthread_cond_init (&message_mutex_cv, NULL);
 	
 	pthread_t broadcast_thread_id;
 	pthread_create(&broadcast_thread_id, NULL, broadcast_thread, NULL);
@@ -79,6 +114,9 @@ void * server_thread(void *arg){
 	//Close Connection
 	close(sock_fd);
 	destroyClientDB();
+	destroyMessageDB();
+	pthread_mutex_destroy(&message_mutex);
+	pthread_cond_destroy(&message_mutex_cv);
 	pthread_exit(NULL);
 }
 
@@ -141,9 +179,18 @@ int controlProtocol(Client* user){
 int chatProtocol(Client* user, CHAT *chat){
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"%s : %s",user->user_name, chat->message);
+	
+	Message *chat_message = createMessage();
+	chat_message->msg = strdup(message_to_log->msg);
+	
 	addToLog(message_to_log);
 	
-	//IMPLEMENTAR LOG E BROADCAST
+	pthread_mutex_lock (&message_mutex);
+	addMessage(chat_message);
+	pthread_cond_signal(&message_mutex_cv);
+	pthread_mutex_unlock (&message_mutex);	
+	
+	//IMPLEMENTAR BROADCAST
 	
 	return 0;
 }
@@ -179,7 +226,6 @@ proto_msg *loginProto(proto_msg * login_message, Client* user){
 	login__init(&login_response);
 	login_response.username = strdup(login->username);
 	login_response.has_validation = 1;
-	
 	
 	user->user_name = strdup(login->username);
 	

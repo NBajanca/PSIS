@@ -6,6 +6,7 @@
 
 #include "client-server.h"
 #include "client-db.h"
+#include "message-db.h"
 #include "log.h"
 
 void * client_thread(void *arg);

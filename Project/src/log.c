@@ -37,8 +37,10 @@ void addToLog(proto_msg * message_to_log){
 	
 	log_file = fopen("log.txt", "a");
 	if (log_file == NULL) {
-	  perror ("Fopen (LOG) ");
-	  exit(-1);
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Fopen (LOG)  : %s", strerror(errno));
+		addToLog(message_to_log);
+		exit(-1);
 	}
 	
 	char *time = getTime();

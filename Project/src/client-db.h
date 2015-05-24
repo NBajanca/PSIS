@@ -22,4 +22,5 @@ void destroyClient(Client* client);
 int addClient(Client* client);
 void removeClient(Client* client);
 
+int *getSockList(int *number_of_users);
 #endif
