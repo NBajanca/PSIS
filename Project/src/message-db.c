@@ -18,7 +18,9 @@ MessageDB *message_db;
 void iniMessageDB(){
 	message_db = (MessageDB*) malloc(sizeof(MessageDB));
 	if(message_db == NULL){
-		perror("[System Error] Malloc (iniMesageDB) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"[System Error] Malloc (iniMesageDB) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
 		exit(-1);
 	}
 	
@@ -55,7 +57,9 @@ void destroyMessageDB(){
 Message* createMessage(){
 	Message* message = (Message*) malloc(sizeof(Message));
 	if(message_db == NULL){
-		perror("[System Error] Malloc (createMessage) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"[System Error] Malloc (createMessage) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
 		return NULL;
 	}
 	message->id = -1;
@@ -98,7 +102,7 @@ int addMessage(Message* message){
 	
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"[%d] %s", message->id, message->msg);
-	addToLog(message_to_log);
+	addToLog(message_to_log, MESSAGE_TYPE);
 	
 	return 0;
 }
@@ -128,6 +132,12 @@ Message **getMessages (int first, int last, int *number_of_messages){
 	*number_of_messages = last-first + 1;
 	
 	Message **message_list = (Message**) malloc ( *number_of_messages * sizeof(Message*));
+	if(message_list == NULL){
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"[System Error] Malloc (getMessages) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
+		exit(-1);
+	}
 	Message *aux = message_db->first;
 	
 	while (aux->id != first){

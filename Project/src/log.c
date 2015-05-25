@@ -10,8 +10,10 @@
 #include "log.h"
 
 pthread_mutex_t log_mutex;
+int counter;
 
 void iniLog(){
+	counter = 0;
 	pthread_mutex_init(&log_mutex, NULL);
 	return;
 }
@@ -34,22 +36,26 @@ char * getTime(){
 	return time_string;
 }
 
-void addToLog(proto_msg * message_to_log){
+void addToLog(proto_msg * message_to_log, int type){
 	FILE *log_file;
 	
 	log_file = fopen("log.txt", "a");
 	if (log_file == NULL) {
-		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-		message_to_log->msg_size = sprintf(message_to_log->msg ,"Fopen (LOG)  : %s", strerror(errno));
-		addToLog(message_to_log);
+		perror ("Open (LogFile) ");
 		exit(-1);
 	}
 	
 	char *time = getTime();
 	pthread_mutex_lock (&log_mutex);
-	fprintf(log_file, "(%s) - %s\n", time , message_to_log->msg);
+	if (type == SERVER_TYPE)
+		fprintf(log_file, "(%s) - %s\n", time , message_to_log->msg);
+	else
+		fprintf(log_file, "(%s) (%d) - %s\n", time , ++counter , message_to_log->msg);
 	pthread_mutex_unlock (&log_mutex);
-	printf("(%s) - %s\n", time , message_to_log->msg);
+	if (type == SERVER_TYPE)
+		printf("(%s) - %s\n", time , message_to_log->msg);
+	else
+		printf("(%s) (%d) - %s\n", time , counter , message_to_log->msg);	
 	free(time);
 	
 	fclose(log_file);

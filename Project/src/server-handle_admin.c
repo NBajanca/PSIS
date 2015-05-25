@@ -20,14 +20,14 @@ int exit_server;
 int handleAdmin(){
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Initializing Admin Handler");
-	addToLog(message_to_log);
+	addToLog(message_to_log, SERVER_TYPE);
 	
 	exit_server = 0;
 	int sock_fd = iniSocket();
 	
 	message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Admin Handler Ready");
-	addToLog(message_to_log);
+	addToLog(message_to_log, SERVER_TYPE);
 	
 	while(1){
 		if (handleNewAdmin (sock_fd) != 0) break;
@@ -46,12 +46,12 @@ int handleNewAdmin (int sock_fd){
 	if(new_sock_fd == -1){
 		message_to_log = createProtoMSG( ALLOC_MSG );
 		message_to_log->msg_size = sprintf(message_to_log->msg ,"Accept (Admin) : %s", strerror(errno));
-		addToLog(message_to_log);
+		addToLog(message_to_log, SERVER_TYPE);
 		exit(-1);
 	}
 	message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Admin LogIn");
-	addToLog(message_to_log);
+	addToLog(message_to_log, MESSAGE_TYPE);
 	
 	//Handle Admin Requests
 	while(!action){
@@ -61,7 +61,7 @@ int handleNewAdmin (int sock_fd){
 	//Close Admin Connection
 	message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Admin LogOut");
-	addToLog(message_to_log);
+	addToLog(message_to_log, MESSAGE_TYPE);
 	close(new_sock_fd);
 	
 	if (action == 1) return 1;
@@ -86,18 +86,18 @@ int handleAdminRequests(int sock_fd){
 		case 0:
 			message_to_log = createProtoMSG( ALLOC_MSG );
 			message_to_log->msg_size = sprintf(message_to_log->msg ,"Received LOG request from Admin");
-			addToLog(message_to_log);
+			addToLog(message_to_log, MESSAGE_TYPE);
 			sendLog(sock_fd);
 			break;
 		case 1:
 			message_to_log = createProtoMSG( ALLOC_MSG );
 			message_to_log->msg_size = sprintf(message_to_log->msg ,"Received QUIT request from Admin");
-			addToLog(message_to_log);
+			addToLog(message_to_log, MESSAGE_TYPE);
 			return 1;
 		case 2:
 			message_to_log = createProtoMSG( ALLOC_MSG );
 			message_to_log->msg_size = sprintf(message_to_log->msg ,"Received DISC request from Admin");
-			addToLog(message_to_log);
+			addToLog(message_to_log, MESSAGE_TYPE);
 			return 2;
 			break;
 	}
@@ -105,10 +105,6 @@ int handleAdminRequests(int sock_fd){
 }
 
 int sendLog(int sock_fd){
-	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-	message_to_log->msg_size = sprintf(message_to_log->msg ,"Sending LOG to Admin");
-	addToLog(message_to_log);
-	
 	ADMIN message;
 	admin__init(&message);
 	message.action = 0;
@@ -131,8 +127,8 @@ int iniSocket(){
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock_fd == -1){
 		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-		message_to_log->msg_size = sprintf(message_to_log->msg ,"Socket (Admin) : %s", strerror(errno));
-		addToLog(message_to_log);
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"[System Error] Socket (Admin) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
 		exit(-1);
 	}
 	
@@ -142,15 +138,15 @@ int iniSocket(){
 
 	if( bind(sock_fd, (struct sockaddr *)  &addr, sizeof(addr)) == -1){
 		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-		message_to_log->msg_size = sprintf(message_to_log->msg ,"Bind (Admin) : %s", strerror(errno));
-		addToLog(message_to_log);
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"[System Error] Bind (Admin) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
 		exit(-2);
 	}
 	
 	if( listen(sock_fd, 1) == -1){
 		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-		message_to_log->msg_size = sprintf(message_to_log->msg ,"Listen (Admin) : %s", strerror(errno));
-		addToLog(message_to_log);
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"[System Error] Listen (Admin) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
 		exit(-1);
 	}
 	

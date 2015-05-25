@@ -101,7 +101,7 @@ int addClient(Client* client){
 	
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"New User Joined (%s)", client->user_name);
-	addToLog(message_to_log);
+	addToLog(message_to_log, MESSAGE_TYPE);
 	
 	return 0;
 }
@@ -140,7 +140,7 @@ void removeClient(Client* client){
 	
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Client LogOut (%s)", client->user_name);
-	addToLog(message_to_log);
+	addToLog(message_to_log, MESSAGE_TYPE);
 	
 	destroyClient(client);
 	return;
@@ -157,7 +157,9 @@ int *getSockList(int *number_of_users){
 	if (client_db->counter == 0) return NULL;
 	sock_list = (int*) malloc (client_db->counter * sizeof (int));
 	if (sock_list == NULL){
-		perror("[System Error] Malloc (Sock List) ");
+		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Malloc (SockList) : %s", strerror(errno));
+		addToLog(message_to_log, SERVER_TYPE);
 		exit(-1);
 	}
 	

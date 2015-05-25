@@ -38,13 +38,16 @@ void * keep_parent_alive_thread(void *arg){
 	int should_exit = 0, error = 0;
 	proto_msg * message_from_relauncher;
 	ALIVE *alive_message;
+	proto_msg *message_to_log;
 	
 	
 	while(! should_exit){
 		sleep(2);
 		message_from_relauncher = receiveMessageFIFO(fd_fifo);
 		if (message_from_relauncher == NULL){
-			printf("Relauncher not responding\n");
+			message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Relauncher not responding\n");
+			addToLog(message_to_log, SERVER_TYPE);
 			if (error == 2) should_exit = 1;
 			else error ++;
 		}else{
@@ -72,13 +75,16 @@ void * keep_son_alive_thread(void *arg){
 	int should_exit = 0;
 	int status;
 	int pid_proc;
+	proto_msg *message_to_log;
 	
 	createRelauncher();
 	sleep(2);
 	while ( !should_exit ){
 		pid_proc = wait(&status);
 		if(WIFSIGNALED(status)){
-			printf("Relauncher (%d) returned with %d code. Rebooting Relauncher...\n", pid_proc, WEXITSTATUS(status));
+			message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Relauncher (%d) returned with %d code. Rebooting Relauncher...\n", pid_proc, WEXITSTATUS(status));
+			addToLog(message_to_log, SERVER_TYPE);
 			if (getExit() == 1){
 				should_exit = 1;
 			}else createRelauncher();
@@ -104,7 +110,9 @@ void * send_alive_thread(void *arg){
 		}
 		message_to_relauncher = protoCreateAlive(&alive_message);
 		if (write(fd_fifo, message_to_relauncher->msg, message_to_relauncher->msg_size) == -1){
-			perror("Write ");
+			proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+			message_to_log->msg_size = sprintf(message_to_log->msg ,"Write (Relauncher) : %s", strerror(errno));
+			addToLog(message_to_log, SERVER_TYPE);
 			should_exit = 1;
 		}
 	}
@@ -115,14 +123,14 @@ void * send_alive_thread(void *arg){
 int handleRelauncher(){
 	proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Initializing Relauncher Handler");
-	addToLog(message_to_log);
+	addToLog(message_to_log, SERVER_TYPE);
 	
 	
 	pthread_create(&keep_parent_alive_thread_id, NULL, keep_parent_alive_thread, NULL);
 	
 	message_to_log = createProtoMSG( ALLOC_MSG );
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Relauncher Handler Ready");
-	addToLog(message_to_log);
+	addToLog(message_to_log, SERVER_TYPE);
 	return 0;
 }
 
@@ -138,7 +146,9 @@ int createRelauncher(){
 	
 	//Fork
 	if (!f_ret){ // IF SON
-		printf("Relauncher created by Server\n");
+		proto_msg *message_to_log = createProtoMSG( ALLOC_MSG );
+		message_to_log->msg_size = sprintf(message_to_log->msg ,"Relauncher created by Server\n");
+		addToLog(message_to_log, SERVER_TYPE);
 		return execve( "relauncher", v , NULL); // Create Process
 	}else //PARENT
 		return f_ret;
