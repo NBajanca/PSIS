@@ -1,0 +1,56 @@
+message LOGIN{
+	required string username = 10;
+	
+	enum VALIDATION {
+	    OK = 0;
+	    IN_USE = 1;
+	    INVALID = 2;
+	  }
+
+	optional VALIDATION validation = 11;
+}
+
+message CHAT{
+	required string message = 30;
+	optional int32 id = 31;
+
+}
+
+message QUERY{
+	required int32 id_min = 40;
+	required int32 id_max = 41;
+
+	repeated CHAT messages = 42;
+}
+
+message MESSAGE{
+	enum NEXT_MESSAGE {
+	    CHAT = 0;
+	    QUERY = 1;
+	    DISC = 2;
+	  }
+
+	required NEXT_MESSAGE next_message = 20;
+	optional CHAT chat = 21;
+	optional QUERY query = 22;
+}
+
+message ADMIN{
+	enum ACTION {
+	    LOG = 0;
+	    QUIT = 1;
+	    DISC = 2;
+	}
+	
+	required ACTION action = 30;
+	optional string log = 31;
+}
+
+message ALIVE{
+	enum STATE {
+	    ALIVE = 0;
+	    QUIT = 1;
+	}
+	
+	required STATE state = 40;
+}

@@ -1,0 +1,26 @@
+---
+:source:
+  :path: test
+  :file: test_test.c
+:successes:
+- :test: test_ini
+  :line: 12
+  :message: ''
+- :test: test_create
+  :line: 19
+  :message: ''
+- :test: test_add
+  :line: 27
+  :message: ''
+- :test: test_getLastMessage
+  :line: 39
+  :message: ''
+:failures: []
+:ignores: []
+:counts:
+  :total: 4
+  :passed: 4
+  :failed: 0
+  :ignored: 0
+:stdout:
+- ''
