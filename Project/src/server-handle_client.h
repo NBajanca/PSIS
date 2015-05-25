@@ -9,6 +9,8 @@
 #include "message-db.h"
 #include "log.h"
 
+pthread_t getClientThread();
+
 void * client_thread(void *arg);
 void * server_thread(void *arg);
 

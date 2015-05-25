@@ -167,7 +167,7 @@ int handleKeyboard(){
 					printf("[User] Invalid CHAT command\n");
 				}
 			}else if(strcmp(command, QUERY_STR)==0){
-				if((sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2) && (cmd_int_arg1 > 1) && (cmd_int_arg2 > cmd_int_arg1)){
+				if((sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2) && (cmd_int_arg1 > 0) && (cmd_int_arg2 >= cmd_int_arg1)){
 					printf("[User] Sending QUERY command (%d %d)\n", cmd_int_arg1, cmd_int_arg2);
 					if (queryProtocol(cmd_int_arg1, cmd_int_arg2) == -1){
 					should_exit= 1;	

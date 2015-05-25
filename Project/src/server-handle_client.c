@@ -12,11 +12,18 @@
 #include <pthread.h>
 
 #include "server-handle_client.h"
+#include "server-handle_admin.h"
 
 //https://computing.llnl.gov/tutorials/pthreads/#ConditionVariables
 
 pthread_mutex_t message_mutex;
 pthread_cond_t message_mutex_cv;
+
+pthread_t server_thread_id;
+
+pthread_t getClientThread(){
+	return server_thread_id;
+}
 
 void * client_thread(void *arg){
 	Client* user = (Client*) arg;
@@ -29,10 +36,12 @@ void * client_thread(void *arg){
 			pthread_exit(NULL);
 			break;
 		}
-	}while (user->user_name == NULL);
+		if (getExit() == 1) should_exit = 1;
+	}while (user->user_name == NULL || should_exit);
 	//Comunication with Client
 	while(! should_exit){
 		if (controlProtocol(user) != 0) should_exit = 1;
+		if (getExit() == 1) should_exit = 1;
 	}
 	//Close Connection
 	close(user->sock);
@@ -57,6 +66,7 @@ void * broadcast_thread(void *arg){
 		
 		pthread_mutex_lock (&message_mutex);
 		pthread_cond_wait(&message_mutex_cv, &message_mutex);
+		if (getExit() == 1) break;
 		message_to_broadcast = getLastMessage();
 		sprintf( aux, "[%d] %s", message_to_broadcast->id, message_to_broadcast->msg);
 		chat_message.message = strdup(aux);
@@ -96,24 +106,44 @@ void * server_thread(void *arg){
 	
 	pthread_t broadcast_thread_id;
 	pthread_create(&broadcast_thread_id, NULL, broadcast_thread, NULL);
+	fd_set readfds;
 	
 	while (!should_exit){
-		new_sock = accept(sock_fd, NULL, NULL);
-		if(sock_fd == -1){
-			proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
-			message_to_log->msg_size = sprintf(message_to_log->msg ,"Accept (Client) : %s", strerror(errno));
-			addToLog(message_to_log);
+		FD_ZERO(&readfds);
+		FD_SET(sock_fd, &readfds);
+		struct timeval tv = {30, 0};
+		if (select(sock_fd + 1, &readfds, NULL, NULL, &tv) == -1){
+			perror("[System Error] Select (Server Thread)");
 			exit(-1);
 		}
-		Client* user = createClient();
-		user->sock = new_sock;
-		
-		pthread_create(&user->thread_id, NULL, client_thread, user);
+		if (FD_ISSET(sock_fd, &readfds)) {
+			new_sock = accept(sock_fd, NULL, NULL);
+			if(sock_fd == -1){
+				proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
+				message_to_log->msg_size = sprintf(message_to_log->msg ,"Accept (Client) : %s", strerror(errno));
+				addToLog(message_to_log);
+				exit(-1);
+			}
+			Client* user = createClient();
+			user->sock = new_sock;
+			
+			pthread_create(&user->thread_id, NULL, client_thread, user);
+		}
+		if (getExit() == 1) should_exit = 1;
 	}
 	
 	//Close Connection
 	close(sock_fd);
+	
+	//Waits for threads to close
 	destroyClientDB();
+	
+	//Wakes up broadcast thread to close it
+	pthread_mutex_lock (&message_mutex);
+	pthread_cond_signal(&message_mutex_cv);
+	pthread_mutex_unlock (&message_mutex);
+	
+	//
 	destroyMessageDB();
 	pthread_mutex_destroy(&message_mutex);
 	pthread_cond_destroy(&message_mutex_cv);
@@ -125,7 +155,6 @@ int handleClient(){
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"Initializing Client Handler");
 	addToLog(message_to_log);
 	
-	pthread_t server_thread_id;
 	pthread_create(&server_thread_id, NULL, server_thread, NULL);
 	
 	message_to_log = createProtoMSG( ALLOC_MSG );
@@ -136,44 +165,64 @@ int handleClient(){
 
 //Message Processing
 int loginProtocol(Client* user){
-	//Receive Message
-	proto_msg * login_message = receiveMessage(user->sock);
-	if (login_message == NULL) return -1;
-	
-	//Login Protocol - PROTO and CLIENTDB
-	proto_msg * proto_message = loginProto(login_message, user);
-	destroyProtoMSG(login_message);
-	
-	//Send Message
-	send(user->sock, proto_message->msg, proto_message->msg_size, 0);
-	destroyProtoMSG(proto_message);
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(user->sock, &readfds);
+	struct timeval tv = {30, 0};
+	if (select(user->sock + 1, &readfds, NULL, NULL, &tv) == -1){
+		perror("[System Error] Select (Login Protocol)");
+		exit(-1);
+	}
+	if (FD_ISSET(user->sock, &readfds)) {
+		//Receive Message
+		proto_msg * login_message = receiveMessage(user->sock);
+		if (login_message == NULL) return -1;
+		
+		//Login Protocol - PROTO and CLIENTDB
+		proto_msg * proto_message = loginProto(login_message, user);
+		destroyProtoMSG(login_message);
+		
+		//Send Message
+		send(user->sock, proto_message->msg, proto_message->msg_size, 0);
+		destroyProtoMSG(proto_message);
+	}
 	
 	return 0;
 }
 
 int controlProtocol(Client* user){
-	//Receive Message
-	proto_msg * control_message = receiveMessage(user->sock);
-	if (control_message == NULL) return -1;
-	
-	//Unmarshal incoming message
-	MESSAGE *control = message__unpack(NULL, control_message->msg_size, control_message->msg);
-	destroyProtoMSG(control_message);
-	fflush(stdout);
-	
-	switch (control->next_message){
-		case 0:
-			if (chatProtocol(user,control->chat) == -1) return -1;
-			break;
-		case 1:
-			if (queryProtocol(user, control->query) == -1)return -1;
-			break;
-		case 2:
-			return 1;
-			break;
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	FD_SET(user->sock, &readfds);
+	struct timeval tv = {30, 0};
+	if (select(user->sock + 1, &readfds, NULL, NULL, &tv) == -1){
+		perror("[System Error] Select (Control Protocol)");
+		exit(-1);
+	}
+	if (FD_ISSET(user->sock, &readfds)) {
+		//Receive Message
+		proto_msg * control_message = receiveMessage(user->sock);
+		if (control_message == NULL) return -1;
+		
+		//Unmarshal incoming message
+		MESSAGE *control = message__unpack(NULL, control_message->msg_size,(const uint8_t *) control_message->msg);
+		destroyProtoMSG(control_message);
+		fflush(stdout);
+		
+		switch (control->next_message){
+			case 0:
+				if (chatProtocol(user,control->chat) == -1) return -1;
+				break;
+			case 1:
+				if (queryProtocol(user, control->query) == -1)return -1;
+				break;
+			case 2:
+				return 1;
+				break;
+		}
 	}
 	
-	return ;
+	return 0;
 }
 
 int chatProtocol(Client* user, CHAT *chat){
@@ -251,7 +300,7 @@ int queryProtocol(Client* user, QUERY *query){
  * */
 proto_msg *loginProto(proto_msg * login_message, Client* user){
 	//Unmarshal incoming message
-	LOGIN *login = login__unpack(NULL, login_message->msg_size, login_message->msg);
+	LOGIN *login = login__unpack(NULL, login_message->msg_size, (const uint8_t *) login_message->msg);
 	
 	//Prepare response message
 	LOGIN login_response;
@@ -277,8 +326,7 @@ proto_msg *loginProto(proto_msg * login_message, Client* user){
 
 int iniClientSocket(){
 	int sock_fd;
-	struct sockaddr_in addr, client_addr;
-	int addr_len; 
+	struct sockaddr_in addr;
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock_fd == -1){
@@ -297,7 +345,7 @@ int iniClientSocket(){
 		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 		message_to_log->msg_size = sprintf(message_to_log->msg ,"Bind (Client) : %s", strerror(errno));
 		addToLog(message_to_log);
-		exit(-1);
+		exit(-2);
 	}
 	
 	if( listen(sock_fd, 10) == -1){

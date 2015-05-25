@@ -4,6 +4,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <pthread.h>
 
 #include "client-server.pb-c.h"
@@ -17,6 +20,18 @@
 pthread_t keep_parent_alive_thread_id;
 pthread_t keep_son_alive_thread_id;
 pthread_t send_alive_thread_id;
+
+pthread_t getRelauncherThread(int thread_number){
+	switch(thread_number){
+		case 0:
+			return keep_parent_alive_thread_id;
+		case 1:
+			return keep_son_alive_thread_id;
+		case 2:
+			return send_alive_thread_id;
+	}
+	return (pthread_t) 0;
+}
 
 void * keep_parent_alive_thread(void *arg){
 	int fd_fifo = openFIFO(1);
@@ -33,7 +48,7 @@ void * keep_parent_alive_thread(void *arg){
 			if (error == 2) should_exit = 1;
 			else error ++;
 		}else{
-			alive_message = alive__unpack(NULL, message_from_relauncher->msg_size, message_from_relauncher->msg);
+			alive_message = alive__unpack(NULL, message_from_relauncher->msg_size, (const uint8_t *) message_from_relauncher->msg);
 			if (alive_message == NULL){
 				if (error == 2) should_exit = 1;
 				else error ++;
@@ -41,10 +56,13 @@ void * keep_parent_alive_thread(void *arg){
 				if (alive_message->state == 0) error = 0;
 			}
 		}
+		if (getExit() == 1) should_exit = 1;
 	}
 	
-	pthread_create(&send_alive_thread_id, NULL, send_alive_thread, NULL);
-	pthread_create(&keep_son_alive_thread_id, NULL, keep_son_alive_thread, NULL);
+	if (getExit() != 1){
+		pthread_create(&send_alive_thread_id, NULL, send_alive_thread, NULL);
+		pthread_create(&keep_son_alive_thread_id, NULL, keep_son_alive_thread, NULL);
+	}
 	
 	pthread_exit(NULL);
 }
@@ -124,3 +142,5 @@ int createRelauncher(){
 	}else //PARENT
 		return f_ret;
 }
+
+

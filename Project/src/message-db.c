@@ -19,10 +19,7 @@ void iniMessageDB(){
 	message_db = (MessageDB*) malloc(sizeof(MessageDB));
 	message_db->first = NULL;
 	message_db->last = NULL;
-	message_db->counter = 0;
-	
-	
-	
+	message_db->counter = 0;	
 }
 
 /* destroyMessageDB
@@ -41,8 +38,6 @@ void destroyMessageDB(){
 		}
 		destroyMessage(aux);
 	}
-	
-	
 	free(message_db);
 	return;
 }

@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <pthread.h>
+
 #include "client-db.h"
 #include "log.h"
 
@@ -32,17 +34,11 @@ void iniClientDB(){
  * */
 void destroyClientDB(){
 	
-	if (client_db->first != NULL){
-		Client *aux2, *aux = client_db->first;
-		while (aux->next != NULL){
-			aux2 = aux;
-			aux = aux->next;
-			destroyClient(aux2);
-		}
-		destroyClient(aux);
+	while(1){
+		if (client_db->counter == 0) break;
 	}
-	pthread_mutex_destroy(&client_mutex);
 	
+	pthread_mutex_destroy(&client_mutex);
 	free(client_db);
 	return;
 }

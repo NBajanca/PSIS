@@ -141,7 +141,7 @@ int iniSocket(){
 		proto_msg * message_to_log = createProtoMSG( ALLOC_MSG );
 		message_to_log->msg_size = sprintf(message_to_log->msg ,"Bind (Admin) : %s", strerror(errno));
 		addToLog(message_to_log);
-		exit(-1);
+		exit(-2);
 	}
 	
 	if( listen(sock_fd, 1) == -1){
