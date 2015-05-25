@@ -4,9 +4,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <sys/un.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <arpa/inet.h>
 
 #include "client-server.pb-c.h"
@@ -14,17 +11,18 @@
 #include "client-server.h"
 
 #define LOGIN_STR "LOGIN"// username 
-#define DISC_STR "DISC" //Disconnects from server
+#define DISC_STR "DISC"
 #define CHAT_STR "CHAT"// string
-#define QUERY_STR "QUERY"// id_min id_max – request o
+#define QUERY_STR "QUERY"// id_min id_max
 
 //Socket
 int sock_fd;
-int iniSocket();
+void iniSocket();
 
 //Server
 int login_status;
 int serverMessages();
+int discProtocol();
 
 //User Interface
 int handleKeyboard();
@@ -49,7 +47,7 @@ int main(){
 	
 	//Program
 	//Socket
-	sock_fd = iniSocket();
+	iniSocket();
 	login_status = 0;
 	
 	//Select
@@ -62,7 +60,7 @@ int main(){
 		FD_SET(sock_fd, &readfds);
 	
 		if (select(sock_fd + 1, &readfds, NULL, NULL, NULL) == -1){
-			perror("Select ");
+			perror("[System Error] Select ");
 			exit(-1);
 		}
 		
@@ -74,27 +72,45 @@ int main(){
 			should_exit = handleKeyboard(); 
 		}
 	}
+	
+	close(sock_fd);
+	printf("\nSee you soon!\n");
 	exit(0);
 }
 
+/* serverMessages
+ * 
+ * Handles the server messages.
+ * 
+ * @ returns int - (1) for exit or (0) for repeat.
+ * */
 int serverMessages(){
 	proto_msg *broadcast_message;
 	MESSAGE * broadcat_message_aux;
 	
 	broadcast_message = receiveMessage(sock_fd);
-	broadcat_message_aux = message__unpack(NULL, broadcast_message->msg_size, broadcast_message->msg);
+	if (broadcast_message == NULL){
+		printf("[System] Error receiving messages from server. Disconnecting...\n");
+		return -1;
+	}
+	broadcat_message_aux = message__unpack(NULL, broadcast_message->msg_size, (const uint8_t *)broadcast_message->msg);
+	if (broadcat_message_aux == NULL){
+		printf("[System] Message from server in incorrect format (Discarted)\n");
+		return 0;
+	}
 	
 	switch (broadcat_message_aux->next_message){
 		case 0:
 			printf("\t%s\n", broadcat_message_aux->chat->message);
 			break;
 		case 1:
-			printf("\tReceiving Query Response\n");
 			queryReceiveProtocol(broadcat_message_aux->query);
 			break;
 		case 2:
 			printf("\tServer is Shuting Down\n");
-			break;
+			message__free_unpacked(broadcat_message_aux, NULL);
+			destroyProtoMSG(broadcast_message);
+			return 1;
 	}
 	
 	message__free_unpacked(broadcat_message_aux, NULL);
@@ -120,61 +136,55 @@ int handleKeyboard(){
 	fgets(line, STD_SIZE, stdin);
 	if(sscanf(line, "%s", command) == 1){
 		if(strcmp(command, LOGIN_STR) == 0 && !(login_status)){
-			if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
-				printf("Sending LOGIN command (%s)\n", cmd_str_arg);
+			if((sscanf(line, "%*s %s", cmd_str_arg) == 1) && (strlen (cmd_str_arg) <= USERNAME_SIZE_LIMIT)){
+				printf("[User] Sending LOGIN command (%s)\n", cmd_str_arg);
 				if (loginProtocol(cmd_str_arg) == -1){
 					close(sock_fd);
 					should_exit= 1;	
 				}
 			}
 			else{
-				printf("Invalid LOGIN command\n");
+				printf("[User] Invalid LOGIN command\n");
 			}
 			
 		}else if(strcmp(command, DISC_STR)==0 && !(login_status)){
-			printf("Exiting the app\n");
-			close(sock_fd);
 			should_exit= 1;						
 		}else if (login_status){
 			if(strcmp(command, DISC_STR)==0){
-				printf("Sending DISconnnect command\n");
+				printf("[User] Sending DISconnnect command\n");
 				discProtocol();
-				printf("Exiting the app\n");
-				close(sock_fd);
 				should_exit= 1;						
 
 			}else if(strcmp(command, CHAT_STR)==0){
-				if(sscanf(line, "%*s %s", cmd_str_arg) == 1){
-					printf("Sending CHAT command (%s)\n", cmd_str_arg);
+				if((sscanf(line, "%*s %s", cmd_str_arg) == 1) && (strlen (cmd_str_arg) <= CHATSTRING_SIZE_LIMIT)){
+					printf("[User] Sending CHAT command (%s)\n", cmd_str_arg);
 					if (chatProtocol(cmd_str_arg) == -1){
-					close(sock_fd);
 					should_exit= 1;	
 					}
 				
 				}
 				else{
-					printf("Invalid CHAT command\n");
+					printf("[User] Invalid CHAT command\n");
 				}
 			}else if(strcmp(command, QUERY_STR)==0){
-				if(sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2){
-					printf("Sending QUERY command (%d %d)\n", cmd_int_arg1, cmd_int_arg2);
+				if((sscanf(line, "%*s %d %d", &cmd_int_arg1, &cmd_int_arg2) == 2) && (cmd_int_arg1 > 1) && (cmd_int_arg2 > cmd_int_arg1)){
+					printf("[User] Sending QUERY command (%d %d)\n", cmd_int_arg1, cmd_int_arg2);
 					if (queryProtocol(cmd_int_arg1, cmd_int_arg2) == -1){
-					close(sock_fd);
 					should_exit= 1;	
 					}
 				
 				}
 				else{
-					printf("Invalid QUERY command\n");
+					printf("[User] Invalid QUERY command\n");
 				}
 			}else{
-				printf("Invalid command\n");
+				printf("[User] Invalid command\n");
 			}
 		}else{
-				printf("Invalid command - LOGIN Required!\n");
+				printf("[User] Invalid command - LOGIN Required!\n");
 		}
 	}else{
-		printf("Error in command\n");
+		printf("[User] Error in command\n");
 	}
 	return should_exit;
 }
@@ -359,23 +369,26 @@ proto_msg *loginSendProto(char *buffer){
  * @ login_response_message - Structure with the login response from the server.
  * */
 void loginReceiveProto(proto_msg *login_response_message){	
-	LOGIN *login_response = login__unpack(NULL, login_response_message->msg_size, login_response_message->msg);
+	LOGIN *login_response = login__unpack(NULL, login_response_message->msg_size, (const uint8_t *)login_response_message->msg);
+	if (login_response == NULL){
+		printf("[System] Message from server in incorrect format (Discarted)\n");
+		return;
+	}
 	
 	switch ( login_response->validation ) {
 		case 0:
-			printf("User Login with success\n");
+			printf("\tUser Login with success\n");
 			login_status = 1;
 			break;
 		case 1:
-			printf("Username in use\n");
+			printf("\tUsername in use\n");
 			login_status = 0;
 			break;
 		default:
-			printf("Username invalid\n");
+			printf("\tUsername invalid\n");
 			login_status = 0;
 			break;
 	}
-	fflush(stdout);
 	
 	//Free involved memory
 	destroyProtoMSG(login_response_message);
@@ -392,13 +405,12 @@ void loginReceiveProto(proto_msg *login_response_message){
  * 
  * @ returns sock_fd - Socket descriptor
  * */
-int iniSocket(){
-	int sock_fd;
+void iniSocket(){
 	struct sockaddr_in server_addr;
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock_fd == -1){
-		perror("socket ");
+		perror("[System Error] Socket ");
 		exit(-1);
 	}
 
@@ -407,9 +419,9 @@ int iniSocket(){
 	inet_aton("127.0.0.1", & server_addr.sin_addr); /*IP*/	
 
 	if( connect(sock_fd, ( struct sockaddr *) &server_addr, sizeof(server_addr)) == -1){
-		perror("connect ");
+		perror("[System Error] Connect ");
 		exit(-1);
 	}
 	
-	return sock_fd;
+	return;
 }
