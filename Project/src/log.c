@@ -3,7 +3,9 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+
 #include <time.h>
+#include <pthread.h>
 
 #include "log.h"
 
@@ -66,6 +68,11 @@ proto_msg *getLog(){
 	rewind(log_file);
 	
 	message->msg = malloc(message->msg_size * (sizeof(char)));
+	if( message->msg == NULL){
+		pthread_mutex_unlock (&log_mutex);
+		perror("[System Error] Malloc (getLog) ");
+		return NULL;
+	}
 	fread(message->msg, sizeof(char), message->msg_size, log_file);
 	pthread_mutex_unlock (&log_mutex);
 	

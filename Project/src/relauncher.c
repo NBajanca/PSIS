@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
 #include <pthread.h>
 
 #include "client-server.pb-c.h"
@@ -55,9 +54,9 @@ void * keep_parent_alive_thread(void *arg){
 					exit_server = 1;
 					printf("[System Relauncher] Server turned off by admin. Closing Relauncher...\n");
 				}
-			
+				alive__free_unpacked(alive_message, NULL);
 			}
-			alive__free_unpacked(alive_message, NULL);
+			
 		}
 	}
 	

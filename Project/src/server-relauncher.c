@@ -5,6 +5,8 @@
 #include <unistd.h>
 
 #include <fcntl.h>
+#include <sys/stat.h>
+
 #include "client-server.pb-c.h"
 #include "server-relauncher.h"
 
@@ -57,7 +59,7 @@ proto_msg* protoCreateAlive(ALIVE * alive){
 	
 	proto_message->msg_size = alive__get_packed_size(alive);
 	proto_message->msg = malloc(proto_message->msg_size);
-	alive__pack(alive, proto_message->msg);
+	alive__pack(alive, (uint8_t *) proto_message->msg);
 	
 	return proto_message;
 }

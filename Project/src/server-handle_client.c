@@ -14,7 +14,6 @@
 #include "server-handle_client.h"
 #include "server-handle_admin.h"
 
-//https://computing.llnl.gov/tutorials/pthreads/#ConditionVariables
 
 pthread_mutex_t message_mutex;
 pthread_cond_t message_mutex_cv;
@@ -44,6 +43,14 @@ void * client_thread(void *arg){
 		if (getExit() == 1) should_exit = 1;
 	}
 	//Close Connection
+	
+	//Send Disconnect
+	MESSAGE disc_message;
+	message__init(&disc_message);
+	disc_message.next_message = 2;
+	proto_msg * disconnect = protoCreateMessage(&disc_message);
+	sendMessage(disconnect, user->sock);
+		
 	close(user->sock);
 	removeClient(user);
 	pthread_exit(NULL);
@@ -76,6 +83,10 @@ void * broadcast_thread(void *arg){
 		broadcast = protoCreateMessage(&chat_broadcast);
 		
 		sock_list = getSockList(&number_of_users);
+		if (sock_list == NULL){
+			destroyProtoMSG(broadcast);	
+			continue;
+		}
 		for (i = 0; i < number_of_users; i++){
 			send(sock_list[i], broadcast->msg, broadcast->msg_size, 0);
 		}
@@ -180,6 +191,7 @@ int loginProtocol(Client* user){
 		
 		//Login Protocol - PROTO and CLIENTDB
 		proto_msg * proto_message = loginProto(login_message, user);
+		if (proto_message == NULL) return 0;
 		destroyProtoMSG(login_message);
 		
 		//Send Message
@@ -206,6 +218,10 @@ int controlProtocol(Client* user){
 		
 		//Unmarshal incoming message
 		MESSAGE *control = message__unpack(NULL, control_message->msg_size,(const uint8_t *) control_message->msg);
+		if (control == NULL){
+			printf("[System - Client Handler] Message from client in incorrect format (Discarted)\n");
+			return 0;
+		}
 		destroyProtoMSG(control_message);
 		fflush(stdout);
 		
@@ -228,6 +244,7 @@ int controlProtocol(Client* user){
 int chatProtocol(Client* user, CHAT *chat){
 	char aux[STD_SIZE];
 	Message *chat_message = createMessage();
+	if (chat_message == NULL) return -1;
 	
 	sprintf(aux ,"%s : %s",user->user_name, chat->message);
 	chat_message->msg = strdup(aux);
@@ -257,11 +274,19 @@ int queryProtocol(Client* user, QUERY *query){
 	
 	CHAT **chat_messages;
     chat_messages = malloc (sizeof (CHAT*) * (number_of_messages));
+    if (chat_messages == NULL){
+		perror("[System - Client Handler Error] Malloc (chat messages)\n");
+		exit(-1);
+	}
     int i;
     
     for (i = 0; i < number_of_messages; i++)
 	{
 		chat_messages[i] = malloc (sizeof (CHAT));
+		if (chat_messages == NULL){
+			perror("[System - Client Handler Error] Malloc (chat message)\n");
+			exit(-1);
+		}
 		chat__init (chat_messages[i]);
 		chat_messages[i]->message = strdup(list_of_messages[i]->msg);
 		chat_messages[i]->has_id = 1;
@@ -301,6 +326,10 @@ int queryProtocol(Client* user, QUERY *query){
 proto_msg *loginProto(proto_msg * login_message, Client* user){
 	//Unmarshal incoming message
 	LOGIN *login = login__unpack(NULL, login_message->msg_size, (const uint8_t *) login_message->msg);
+	if (login == NULL){
+		printf("[System - Client Handler] Message from client in incorrect format (Discarted)\n");
+		return NULL;
+	}
 	
 	//Prepare response message
 	LOGIN login_response;

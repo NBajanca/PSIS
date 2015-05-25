@@ -156,6 +156,10 @@ int *getSockList(int *number_of_users){
 	*number_of_users = client_db->counter;
 	if (client_db->counter == 0) return NULL;
 	sock_list = (int*) malloc (client_db->counter * sizeof (int));
+	if (sock_list == NULL){
+		perror("[System Error] Malloc (Sock List) ");
+		exit(-1);
+	}
 	
 	int i = 0;
 	Client* aux = client_db->first;

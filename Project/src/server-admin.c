@@ -14,7 +14,7 @@ proto_msg* protoCreateAdmin(ADMIN * admin_msg){
 	
 	proto_message->msg_size = admin__get_packed_size(admin_msg);
 	proto_message->msg = malloc(proto_message->msg_size);
-	admin__pack(admin_msg, proto_message->msg);
+	admin__pack(admin_msg, (uint8_t *) proto_message->msg);
 	
 	return proto_message;
 }

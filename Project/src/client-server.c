@@ -22,7 +22,7 @@ proto_msg* protoCreateLogin(LOGIN * login){
 	
 	proto_message->msg_size = login__get_packed_size(login);
 	proto_message->msg = malloc(proto_message->msg_size);
-	login__pack(login, proto_message->msg);
+	login__pack(login, (uint8_t *) proto_message->msg);
 	
 	return proto_message;
 }
@@ -39,7 +39,7 @@ proto_msg* protoCreateMessage(MESSAGE * control_msg){
 	
 	proto_message->msg_size = message__get_packed_size(control_msg);
 	proto_message->msg = malloc(proto_message->msg_size);
-	message__pack(control_msg, proto_message->msg);
+	message__pack(control_msg, (uint8_t *) proto_message->msg);
 	
 	return proto_message;
 }

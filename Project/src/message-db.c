@@ -17,6 +17,11 @@ MessageDB *message_db;
  * */
 void iniMessageDB(){
 	message_db = (MessageDB*) malloc(sizeof(MessageDB));
+	if(message_db == NULL){
+		perror("[System Error] Malloc (iniMesageDB) ");
+		exit(-1);
+	}
+	
 	message_db->first = NULL;
 	message_db->last = NULL;
 	message_db->counter = 0;	
@@ -49,6 +54,10 @@ void destroyMessageDB(){
  * */
 Message* createMessage(){
 	Message* message = (Message*) malloc(sizeof(Message));
+	if(message_db == NULL){
+		perror("[System Error] Malloc (createMessage) ");
+		return NULL;
+	}
 	message->id = -1;
 	message->msg = NULL;
 	message->next = NULL;
@@ -75,9 +84,6 @@ void destroyMessage(Message* message){
  * */
 int addMessage(Message* message){
 	
-	//Critical zone
-	
-	
 	if (message_db->last == NULL){
 		message_db->first = message;
 		message_db->last = message;
@@ -94,12 +100,14 @@ int addMessage(Message* message){
 	message_to_log->msg_size = sprintf(message_to_log->msg ,"[%d] %s", message->id, message->msg);
 	addToLog(message_to_log);
 	
-	//End of critical zone
 	return 0;
 }
 
+/* getLastMessage
+ * 
+ * @return - pointer to last message
+ * */
 Message *getLastMessage (){
-	
 	
 	if (message_db->last == NULL){
 		return NULL;
@@ -109,6 +117,10 @@ Message *getLastMessage (){
 	
 }
 
+/* getMessages
+ * 
+ * @return - array of pointers to the messages between the numbers asked
+ * */
 Message **getMessages (int first, int last, int *number_of_messages){
 	if( (first<= 0) || (last<first)) return NULL;
 	

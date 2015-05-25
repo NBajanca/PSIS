@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <pthread.h>
+
 #include "log.h"
 #include "server-handle_client.h"
 #include "server-handle_admin.h"
@@ -23,5 +25,7 @@ int main ( int arc, char **argv ) {
 	}
 	
 	destroyLog();
+	
+	printf("Server exited normaly\n");
 	exit(0);
 }

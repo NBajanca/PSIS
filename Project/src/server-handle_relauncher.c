@@ -54,6 +54,7 @@ void * keep_parent_alive_thread(void *arg){
 				else error ++;
 			}else{
 				if (alive_message->state == 0) error = 0;
+				alive__free_unpacked(alive_message, NULL);
 			}
 		}
 		if (getExit() == 1) should_exit = 1;

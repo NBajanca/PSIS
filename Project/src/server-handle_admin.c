@@ -73,7 +73,11 @@ int handleAdminRequests(int sock_fd){
 	if (message == NULL) return -1;
 	
 	//Unmarshal incoming message
-	ADMIN *admin = admin__unpack(NULL, message->msg_size, message->msg);
+	ADMIN *admin = admin__unpack(NULL, message->msg_size, (const uint8_t *) message->msg);
+	if (admin == NULL){
+		printf("[System Admin Handler] Message from server in incorrect format (Discarted)\n");
+		return 0;
+	}
 	destroyProtoMSG(message);
 	
 	proto_msg *message_to_log;
@@ -121,8 +125,7 @@ int sendLog(int sock_fd){
 }
 
 int iniSocket(){
-	struct sockaddr_in addr, client_addr;
-	int addr_len; 
+	struct sockaddr_in addr;
 	int sock_fd;
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);

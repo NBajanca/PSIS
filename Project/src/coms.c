@@ -4,6 +4,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include "coms.h"
 
 /* receiveMessage
@@ -21,8 +24,6 @@ proto_msg * receiveMessage(int sock_fd){
 	
 	//Socket closed abruptly
 	if ( message->msg_size == 0){
-		printf("Socket Closed Abruptly\n");
-		close(sock_fd);
 		destroyProtoMSG(message);
 		return NULL;
 	}
